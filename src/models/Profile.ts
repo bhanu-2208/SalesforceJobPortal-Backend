@@ -50,6 +50,7 @@ export type AvatarKind = "preset" | "upload";
 export interface IAvatar {
   kind: AvatarKind;
   value: string;
+  publicId?: string;   // ← NEW — only set when kind is "upload"; presets don't have one  
 }
 
 export interface ILinks {
@@ -65,6 +66,7 @@ export interface ILinks {
 export interface IResume {
   fileName?: string;
   url?: string;
+    publicId?: string;   // ← NEW — Cloudinary's identifier, needed to delete this file later
   uploadedAt?: Date;
 }
 
@@ -191,6 +193,7 @@ const ProfileSchema = new Schema<IProfile>(
       type: {
         kind: { type: String, enum: ["preset", "upload"], default: "preset" },
         value: { type: String, default: "avatar-1" },
+        publicId: { type: String },   // ← NEW
       },
       default: () => ({ kind: "preset", value: "avatar-1" }),
     },
@@ -253,6 +256,7 @@ const ProfileSchema = new Schema<IProfile>(
       fileName: { type: String, trim: true },
       url: { type: String, trim: true },
       uploadedAt: { type: Date },
+        publicId: { type: String, trim: true },   // ← NEW
     },
 
     isPublicToRecruiters: { type: Boolean, default: true },

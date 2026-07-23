@@ -1,5 +1,6 @@
 // services/aiJobParser.service.ts
 import geminiModel from "./gemini.service";
+import { cleanJobDescription } from "../utils/cleanJobDescription";
 import { GeneratedJobSchema, GeneratedJob } from "../validators/generatedJob.schema";
 
 const SYSTEM_INSTRUCTION = `
@@ -28,7 +29,7 @@ Extract the following fields from the job description below and return ONLY a JS
   "salaryMin":        number | null,
   "salaryMax":        number | null,
   "currency":         string | null — e.g. "INR", "USD",
-  "skills":           string[] — technical skills mentioned,
+  "skills":           string[] — Only technical skills,
   "certifications":   string[] — Salesforce certifications mentioned,
   "responsibilities": string[] — key responsibilities as bullet points,
   "requirements":     string[] — key requirements as bullet points,
@@ -49,7 +50,10 @@ ${jd}
 `.trim();
 }
 
-export async function parseJobDescription(jd: string): Promise<GeneratedJob> {
+export async function parseJobDescription(
+        jd:string
+    ):Promise<GeneratedJob>{
+    jd = cleanJobDescription(jd);
   if (!jd || jd.trim().length < 50) {
     throw Object.assign(
       new Error("Job description is too short. Please provide a more detailed JD."),

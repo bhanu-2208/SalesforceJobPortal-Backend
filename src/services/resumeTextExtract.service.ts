@@ -1,16 +1,34 @@
-import fs from "fs/promises";
 import path from "path";
-
-// pdf-parse and mammoth are both free, MIT-licensed npm packages —
-// no paid OCR/parsing service involved. Install with:
-//   npm install pdf-parse mammoth
-//   npm install -D @types/pdf-parse
 import pdfParse from "pdf-parse";
 import mammoth from "mammoth";
 
-export async function extractResumeText(filePath: string): Promise<string> {
-  const ext = path.extname(filePath).toLowerCase();
-  const buffer = await fs.readFile(filePath);
+// Was extractResumeText(filePath: string) reading off local disk.
+// Now fetches the file bytes over HTTP from Cloudinary's URL instead
+// — same output (raw text), different input. Every caller of this
+// function just needs to pass profile.resume.url (now a full
+// https://res.cloudinary.com/... URL) instead of a local path.
+//
+// Requires Node 18+ for the global `fetch` — already the case for any
+// current Next.js/Express setup; if you're on an older Node runtime,
+// swap this for `node-fetch` instead.
+export async function extractResumeTextFromUrl(fileUrl: string): Promise<string> {
+  const ext = path.extname(new URL(fileUrl).pathname).toLowerCase();
+
+  const res = await fetch(fileUrl);
+
+  console.log("Status:", res.status);
+  console.log("Status Text:", res.statusText);
+  console.log("URL:", fileUrl);
+
+  if (!res.ok) {
+      const body = await res.text();
+      console.log(body);
+
+      throw new Error(
+          `Download failed: ${res.status} ${res.statusText}`
+      );
+  }
+  const buffer = Buffer.from(await res.arrayBuffer());
 
   if (ext === ".pdf") {
     const result = await pdfParse(buffer);
@@ -23,9 +41,6 @@ export async function extractResumeText(filePath: string): Promise<string> {
   }
 
   if (ext === ".doc") {
-    // Legacy binary .doc isn't reliably parseable by either library.
-    // Ask the user to re-upload as PDF/DOCX rather than silently
-    // returning garbage text to the AI.
     throw new Error("Old .doc format isn't supported for AI parsing — please upload a PDF or .docx file instead.");
   }
 

@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import Profile from "../models/Profile";
+import cloudinary from "../config/cloudinary";
 import { upsertProfileSchema, setPresetAvatarSchema } from "../validators/Profilevalidation";
 import type { AvatarKind } from "../models/Profile";
-import { extractResumeText } from "../services/resumeTextExtract.service";
+import { extractResumeTextFromUrl } from "../services/resumeTextExtract.service";
 import { parseResumeText } from "../services/aiResumeExtract.service";
 import type { AiParsedResume } from "../models/aiParsedResume";
 
@@ -115,7 +116,8 @@ export const parseResumeWithAI = async (req: Request, res: Response): Promise<vo
     // Step 1 — extract text from the uploaded file
     let resumeText: string;
     try {
-      resumeText = await extractResumeText(req.file.path);
+      console.log(req.file)
+      resumeText = await extractResumeTextFromUrl(req.file.path); // req.file.path is now the Cloudinary URL
     } catch (err) {
       res.status(400).json({
         success: false,
@@ -125,13 +127,51 @@ export const parseResumeWithAI = async (req: Request, res: Response): Promise<vo
     }
  
     // Step 2 — ask Gemini to structure it
-    let parsed: AiParsedResume;
+    // Step 2 — ask Gemini to structure it (with automatic retries)
+let parsed: AiParsedResume;
+
+try {
+  let retries = 3;
+
+  while (true) {
     try {
+      console.log("Calling Gemini...");
+
       parsed = await parseResumeText(resumeText);
-    } catch (err) {
-      res.status(422).json({
+
+        console.log("Gemini parsing successful.");
+        break;
+      } catch (err: any) {
+        const message = err?.message || "";
+
+        const shouldRetry =
+          err?.status === 503 ||
+          message.includes("503") ||
+          message.includes("Service Unavailable") ||
+          message.includes("high demand");
+
+        if (!shouldRetry || retries === 0) {
+          throw err;
+        }
+
+        console.log(
+          `Gemini is busy. Retrying... (${4 - retries}/3)`
+        );
+
+        retries--;
+
+        await new Promise((resolve) =>
+          setTimeout(resolve, (4 - retries) * 2000)
+        );
+      }
+    }
+    } catch (err: any) {
+      console.error("Gemini Error:", err);
+
+      res.status(503).json({
         success: false,
-        message: err instanceof Error ? err.message : "AI parsing failed. You can still fill the form manually.",
+        message:
+          "Gemini is currently experiencing high demand. Please try again in a minute.",
       });
       return;
     }
@@ -145,9 +185,11 @@ export const parseResumeWithAI = async (req: Request, res: Response): Promise<vo
     // Also record the resume file itself, same as the plain upload endpoint
     profile.resume = {
       fileName: req.file.originalname,
-      url: `/uploads/resumes/${req.file.filename}`,
+      url: req.file.path,           // Cloudinary secure_url
+      publicId: req.file.filename,  // Cloudinary public_id, for future cleanup
       uploadedAt: new Date(),
     };
+ 
  
     await profile.save(); // triggers pre-save hook → recomputes profileCompleteness
  
@@ -156,9 +198,14 @@ export const parseResumeWithAI = async (req: Request, res: Response): Promise<vo
       profile,
       message: "Resume parsed — please review each section before saving.",
     });
-  } catch (err) {
-    console.error("parseResumeWithAI error:", err);
-    res.status(500).json({ success: false, message: "Something went wrong while parsing your resume." });
+  } catch (err: any) {
+    console.error("========== PARSE RESUME ERROR ==========");
+    console.error(err);
+
+    res.status(500).json({
+      success: false,
+      message: err.message || "Something went wrong while parsing your resume.",
+    });
   }
 };
 
@@ -250,16 +297,35 @@ export const uploadAvatarFile = async (req: Request, res: Response): Promise<voi
       res.status(400).json({ success: false, message: "No file uploaded" });
       return;
     }
-
-    const useruserId = req.user!.userId;
-    const publicUrl = `/uploads/avatars/${req.file.filename}`;
-
+ 
+    const userId = req.user!.userId;
+ 
+    // With CloudinaryStorage, req.file.path is the Cloudinary secure_url
+    // and req.file.filename is the public_id — NOT a local file path
+    // anymore, even though the property is still called `.path` (that's
+    // just how multer-storage-cloudinary reports it, to stay compatible
+    // with code written for disk storage).
+    const newUrl = req.file.path;
+    const newPublicId = req.file.filename;
+ 
+    const existing = await Profile.findOne({ user: userId });
+ 
+    // Clean up the previous uploaded avatar (not presets — those have
+    // no Cloudinary file to delete) so re-uploading doesn't silently
+    // pile up storage forever.
+    if (existing?.avatar?.kind === "upload" && existing.avatar.publicId) {
+      await cloudinary.uploader.destroy(existing.avatar.publicId, { resource_type: "image" }).catch(() => {
+        // Non-fatal — the new avatar still saves even if the old
+        // Cloudinary file was already gone or the delete call failed.
+      });
+    }
+ 
     const profile = await Profile.findOneAndUpdate(
-      { user: useruserId },
-      { $set: { avatar: { kind: "upload" as AvatarKind, value: publicUrl } } },
+      { user: userId },
+      { $set: { avatar: { kind: "upload" as AvatarKind, value: newUrl, publicId: newPublicId } } },
       { new: true, upsert: true }
     );
-
+ 
     res.json({ success: true, avatar: profile.avatar });
   } catch (err) {
     console.error("uploadAvatarFile error:", err);
@@ -276,24 +342,34 @@ export const uploadResume = async (req: Request, res: Response): Promise<void> =
       res.status(400).json({ success: false, message: "No file uploaded" });
       return;
     }
-
-    const useruserId = req.user!.userId;
-    const publicUrl = `/uploads/resumes/${req.file.filename}`;
-
+ 
+    const userId = req.user!.userId;
+    const newUrl = req.file.path;       // Cloudinary secure_url
+    const newPublicId = req.file.filename; // Cloudinary public_id
+ 
+    const existing = await Profile.findOne({ user: userId });
+ 
+    // Same cleanup pattern as the avatar — delete the old resume file
+    // from Cloudinary before/while saving the new one.
+    if (existing?.resume?.publicId) {
+      await cloudinary.uploader.destroy(existing.resume.publicId, { resource_type: "raw" }).catch(() => {});
+    }
+ 
     const profile = await Profile.findOneAndUpdate(
-      { user: useruserId },
+      { user: userId },
       {
         $set: {
           resume: {
             fileName: req.file.originalname,
-            url: publicUrl,
+            url: newUrl,
+            publicId: newPublicId,
             uploadedAt: new Date(),
           },
         },
       },
       { new: true, upsert: true }
     );
-
+ 
     res.json({ success: true, resume: profile.resume });
   } catch (err) {
     console.error("uploadResume error:", err);
@@ -304,9 +380,15 @@ export const uploadResume = async (req: Request, res: Response): Promise<void> =
 // ── DELETE /api/profile/me/resume ────────────────────────────
 export const deleteResume = async (req: Request, res: Response): Promise<void> => {
   try {
-    const useruserId = req.user!.userId;
+    const userId = req.user!.userId;
+    const existing = await Profile.findOne({ user: userId });
+ 
+    if (existing?.resume?.publicId) {
+      await cloudinary.uploader.destroy(existing.resume.publicId, { resource_type: "raw" }).catch(() => {});
+    }
+ 
     const profile = await Profile.findOneAndUpdate(
-      { user: useruserId },
+      { user: userId },
       { $unset: { resume: 1 } },
       { new: true }
     );

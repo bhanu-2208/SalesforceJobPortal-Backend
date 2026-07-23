@@ -7,7 +7,7 @@ import { runJobImport } from "./src/services/jobScraper.service";
 export function startJobScheduler() {
   // Cron format: minute hour day month weekday
   // "0 */12 * * *" = at minute 0, every 12th hour (00:00 and 12:00 server time)
-  cron.schedule("*/1 * * * *", async () => {
+  cron.schedule("*/50 * * * *", async () => {
     console.log("⏰  5-minu+te scheduled job import triggered");
     await runJobImport();
   });

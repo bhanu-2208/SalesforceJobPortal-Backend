@@ -3,7 +3,7 @@ import path from "path";
 import Job from "../models/Job";
 import Profile from "../models/Profile";
 import AtsCheck from "../models/Atscheck";
-import { extractResumeText } from "../services/resumeTextExtract.service";
+import { extractResumeTextFromUrl } from "../services/resumeTextExtract.service";
 import { runAtsCheck } from "../services/Atsscorer.service";
 
 // ── GET /api/ats/:jobId ───────────────────────────────────────
@@ -44,7 +44,8 @@ export const getAtsScore = async (req: Request, res: Response): Promise<void> =>
     const resumePath = path.join(__dirname, "..", profile.resume.url);
     let resumeText: string;
     try {
-      resumeText = await extractResumeText(resumePath);
+      console.log("Resume URL:", profile.resume.url);
+      resumeText = await extractResumeTextFromUrl(profile.resume.url as string);
     } catch (err) {
       res.status(400).json({
         success: false,

@@ -39,7 +39,8 @@ export async function verifyOtp(req: Request, res: Response): Promise<void> {
 
     res.cookie("refreshToken", result.refreshToken, {
       httpOnly: true, secure: process.env.NODE_ENV === "production",
-      sameSite: "strict", maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict"
+      , maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     res.status(200).json({
@@ -85,7 +86,7 @@ export async function login(req: Request, res: Response): Promise<void> {
 
     res.cookie("refreshToken", result.refreshToken, {
       httpOnly: true, secure: process.env.NODE_ENV === "production",
-      sameSite: "strict", maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict", maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     res.status(200).json({
@@ -125,7 +126,7 @@ export async function refresh(req: Request, res: Response): Promise<void> {
 
 // POST /api/auth/logout
 export async function logout(_req: Request, res: Response): Promise<void> {
-  res.clearCookie("refreshToken", { httpOnly: true, sameSite: "strict" });
+  res.clearCookie("refreshToken", { httpOnly: true, sameSite: process.env.NODE_ENV === "production" ? "none" : "strict" });
   res.status(200).json({ success: true, message: "Logged out." });
   return;
 }
