@@ -1,6 +1,10 @@
 // services/gemini.service.ts
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 17ce2d2a9e0fc518ddcbaa92efc491c74457dcdc
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 // gemini-1.5-flash — fast, free tier, great for structured extraction
