@@ -107,7 +107,7 @@ export const rankCandidatesByJD = async (req: Request, res: Response): Promise<v
       requirements,
     });
   } catch (err) {
-    console.error("rankCandidatesByJD error:", err);
+    // console.error("rankCandidatesByJD error:", err);
     res.status(500).json({ success: false, message: "Something went wrong while ranking candidates." });
   }
 };

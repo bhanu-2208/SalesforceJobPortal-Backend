@@ -90,7 +90,7 @@ async function fetchPage(query: string, nextPageToken?: string): Promise<SerpApi
 
 export async function fetchFromGoogleJobsAggregator(): Promise<RawExternalJob[]> {
   if (!SERPAPI_KEY) {
-    console.warn("⚠️  SERPAPI_KEY not set — skipping Google Jobs aggregator source.");
+    // console.warn("⚠️  SERPAPI_KEY not set — skipping Google Jobs aggregator source.");
     return [];
   }
 
@@ -102,12 +102,12 @@ export async function fetchFromGoogleJobsAggregator(): Promise<RawExternalJob[]>
     try {
       data = await fetchPage("salesforce", nextPageToken);
     } catch (err) {
-      console.error("Google Jobs aggregator page failed:", err);
+      // console.error("Google Jobs aggregator page failed:", err);
       break;
     }
 
     if (data.error) {
-      console.error("SerpApi returned an error:", data.error);
+      // console.error("SerpApi returned an error:", data.error);
       break;
     }
 

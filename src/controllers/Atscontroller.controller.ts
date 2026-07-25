@@ -44,7 +44,7 @@ export const getAtsScore = async (req: Request, res: Response): Promise<void> =>
     const resumePath = path.join(__dirname, "..", profile.resume.url);
     let resumeText: string;
     try {
-      console.log("Resume URL:", profile.resume.url);
+      // console.log("Resume URL:", profile.resume.url);
       resumeText = await extractResumeTextFromUrl(profile.resume.url as string);
     } catch (err) {
       res.status(400).json({
@@ -65,7 +65,7 @@ export const getAtsScore = async (req: Request, res: Response): Promise<void> =>
 
     res.json({ success: true, cached: false, result: saved });
   } catch (err) {
-    console.error("getAtsScore error:", err);
+    // console.error("getAtsScore error:", err);
     res.status(500).json({ success: false, message: "Something went wrong while checking your ATS score." });
   }
 };

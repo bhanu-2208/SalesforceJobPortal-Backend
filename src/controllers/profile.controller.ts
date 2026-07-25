@@ -15,14 +15,14 @@ export const getMyProfile = async (req: Request, res: Response): Promise<void> =
     const useruserId = req.user!.userId;
     let profile = await Profile.findOne({ user: useruserId });
     if (!profile) {
-      console.log("req.user =", req.user);
-      console.log("userId =", req.user?.userId);
-      console.log("creating profile...");
+      // console.log("req.user =", req.user);
+      // console.log("userId =", req.user?.userId);
+      // console.log("creating profile...");
       profile = await Profile.create({ user: useruserId });
     }
     res.json({ success: true, profile });
   } catch (err) {
-    console.error("getMyProfile error:", err);
+    // console.error("getMyProfile error:", err);
     res.status(500).json({ success: false, message: "Failed to load profile" });
   }
 };
@@ -116,7 +116,7 @@ export const parseResumeWithAI = async (req: Request, res: Response): Promise<vo
     // Step 1 — extract text from the uploaded file
     let resumeText: string;
     try {
-      console.log(req.file)
+      // console.log(req.file)
       resumeText = await extractResumeTextFromUrl(req.file.path); // req.file.path is now the Cloudinary URL
     } catch (err) {
       res.status(400).json({
@@ -135,11 +135,11 @@ try {
 
   while (true) {
     try {
-      console.log("Calling Gemini...");
+      // console.log("Calling Gemini...");
 
       parsed = await parseResumeText(resumeText);
 
-        console.log("Gemini parsing successful.");
+        // console.log("Gemini parsing successful.");
         break;
       } catch (err: any) {
         const message = err?.message || "";
@@ -154,9 +154,9 @@ try {
           throw err;
         }
 
-        console.log(
-          `Gemini is busy. Retrying... (${4 - retries}/3)`
-        );
+        // console.log(
+        //   `Gemini is busy. Retrying... (${4 - retries}/3)`
+        // );
 
         retries--;
 
@@ -166,7 +166,7 @@ try {
       }
     }
     } catch (err: any) {
-      console.error("Gemini Error:", err);
+      // console.error("Gemini Error:", err);
 
       res.status(503).json({
         success: false,
@@ -199,8 +199,8 @@ try {
       message: "Resume parsed — please review each section before saving.",
     });
   } catch (err: any) {
-    console.error("========== PARSE RESUME ERROR ==========");
-    console.error(err);
+    // console.error("========== PARSE RESUME ERROR ==========");
+    // console.error(err);
 
     res.status(500).json({
       success: false,
@@ -224,7 +224,7 @@ export const getPublicProfile = async (req: Request, res: Response): Promise<voi
     }
     res.json({ success: true, profile });
   } catch (err) {
-    console.error("getPublicProfile error:", err);
+    // console.error("getPublicProfile error:", err);
     res.status(500).json({ success: false, message: "Failed to load profile" });
   }
 };
@@ -255,7 +255,7 @@ export const upsertMyProfile = async (req: Request, res: Response): Promise<void
 
     res.json({ success: true, profile });
   } catch (err: any) {
-    console.error("upsertMyProfile error:", err);
+    // console.error("upsertMyProfile error:", err);
     if (err?.name === "ValuserIdationError") {
       res.status(400).json({ success: false, message: err.message });
       return;
@@ -283,7 +283,7 @@ export const setPresetAvatar = async (req: Request, res: Response): Promise<void
 
     res.json({ success: true, avatar: profile.avatar });
   } catch (err) {
-    console.error("setPresetAvatar error:", err);
+    // console.error("setPresetAvatar error:", err);
     res.status(500).json({ success: false, message: "Failed to set avatar" });
   }
 };
@@ -328,7 +328,7 @@ export const uploadAvatarFile = async (req: Request, res: Response): Promise<voi
  
     res.json({ success: true, avatar: profile.avatar });
   } catch (err) {
-    console.error("uploadAvatarFile error:", err);
+    // console.error("uploadAvatarFile error:", err);
     res.status(500).json({ success: false, message: "Failed to upload avatar" });
   }
 };
@@ -372,7 +372,7 @@ export const uploadResume = async (req: Request, res: Response): Promise<void> =
  
     res.json({ success: true, resume: profile.resume });
   } catch (err) {
-    console.error("uploadResume error:", err);
+    // console.error("uploadResume error:", err);
     res.status(500).json({ success: false, message: "Failed to upload resume" });
   }
 };
@@ -394,7 +394,7 @@ export const deleteResume = async (req: Request, res: Response): Promise<void> =
     );
     res.json({ success: true, profile });
   } catch (err) {
-    console.error("deleteResume error:", err);
+    // console.error("deleteResume error:", err);
     res.status(500).json({ success: false, message: "Failed to delete resume" });
   }
 };

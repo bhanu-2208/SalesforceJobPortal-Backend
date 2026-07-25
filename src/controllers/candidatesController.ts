@@ -79,7 +79,7 @@ export const getCandidates = async (req: Request, res: Response): Promise<void> 
       page: pageNum,
     });
   } catch (err) {
-    console.error("getCandidates error:", err);
+    // console.error("getCandidates error:", err);
     res.status(500).json({ success: false, message: "Failed to load candidates" });
   }
 };

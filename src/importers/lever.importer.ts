@@ -101,10 +101,10 @@ posting.lists
     }
     catch(error){
 
-        console.log(
-            `Lever failed ${companyName}`,
-            error
-        );
+        // console.log(
+        //     `Lever failed ${companyName}`,
+        //     error
+        // );
 
     }
 

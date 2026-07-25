@@ -22,7 +22,7 @@ export async function generateJob(req: Request, res: Response): Promise<void> {
     res.status(200).json({ success: true, job });
     return;
   } catch (err: any) {
-    console.error("❌ generateJob error:", err.message);
+    // console.error("❌ generateJob error:", err.message);
     res.status(err.status || 500).json({
       success: false,
       message: err.message || "Failed to generate job from description.",

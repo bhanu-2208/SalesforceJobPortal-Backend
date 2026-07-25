@@ -14,7 +14,6 @@ import feedbackRouter  from "./src/routes/Feedback.routes";
 import profileRoutes from "./src/routes/profile.routes";
 import appliedjobs from "./src/routes/Appliedjobs.routes"
 import atsRoutes from "./src//routes/Ats.routes";
-import { startJobScheduler } from "./scheduler";
 import scraperRouter from "./src/routes/scraper.routes";
 import candidatesRoutes from "./src/routes/Candidates.routes";
 import savedCandidatesRoutes from "./src/routes/Savedcandidates.routes";
@@ -112,6 +111,5 @@ app.use((_req, res) => {
 connectDB().then(() => {
   app.listen(PORT, () => {
     console.log(`✅  Server running on http://localhost:${PORT}`);
-    startJobScheduler();    
   });
 });

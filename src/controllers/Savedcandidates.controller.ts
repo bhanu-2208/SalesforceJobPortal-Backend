@@ -18,7 +18,7 @@ export const saveCandidate = async (req: Request, res: Response): Promise<void> 
 
     res.json({ success: true, saved });
   } catch (err) {
-    console.error("saveCandidate error:", err);
+    // console.error("saveCandidate error:", err);
     res.status(500).json({ success: false, message: "Failed to save candidate" });
   }
 };
@@ -32,7 +32,7 @@ export const unsaveCandidate = async (req: Request, res: Response): Promise<void
     await SavedCandidate.findOneAndDelete({ recruiter: recruiterId, candidate: candidateId });
     res.json({ success: true });
   } catch (err) {
-    console.error("unsaveCandidate error:", err);
+    // console.error("unsaveCandidate error:", err);
     res.status(500).json({ success: false, message: "Failed to remove saved candidate" });
   }
 };
@@ -47,7 +47,7 @@ export const getSavedCandidateIds = async (req: Request, res: Response): Promise
     const saved = await SavedCandidate.find({ recruiter: recruiterId }).select("candidate").lean();
     res.json({ success: true, data: saved.map((s) => String(s.candidate)) });
   } catch (err) {
-    console.error("getSavedCandidateIds error:", err);
+    // console.error("getSavedCandidateIds error:", err);
     res.status(500).json({ success: false, message: "Failed to load saved candidates" });
   }
 };

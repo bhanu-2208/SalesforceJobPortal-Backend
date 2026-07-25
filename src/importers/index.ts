@@ -38,7 +38,7 @@ export async function fetchAllExternalJobs(): Promise<RawExternalJob[]> {
           break;
       }
     } catch (err) {
-      console.error(`Failed for ${company.name}:`, err);
+      // console.error(`Failed for ${company.name}:`, err);
     }
   }
 

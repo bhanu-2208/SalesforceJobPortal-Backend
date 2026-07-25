@@ -29,6 +29,8 @@ router.post(
   "/cron",
   async (req, res) => {
     try {
+      console.log("⏰ External cron triggered:", new Date().toISOString());
+
       const secret = req.header("x-scraper-secret");
 
       if (secret !== process.env.SCRAPER_SECRET) {

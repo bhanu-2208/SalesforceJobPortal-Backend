@@ -79,9 +79,9 @@ export async function fetchFromSmartRecruiters(
 
         if(!res.ok){
 
-            console.log(
-                `SmartRecruiters unavailable: ${companyName}`
-            );
+            // console.log(
+            //     `SmartRecruiters unavailable: ${companyName}`
+            // );
 
             return [];
 
@@ -152,10 +152,10 @@ export async function fetchFromSmartRecruiters(
     }
     catch(error){
 
-        console.log(
-            `SmartRecruiters failed: ${companyName}`,
-            error
-        );
+        // console.log(
+        //     `SmartRecruiters failed: ${companyName}`,
+        //     error
+        // );
 
     }
 

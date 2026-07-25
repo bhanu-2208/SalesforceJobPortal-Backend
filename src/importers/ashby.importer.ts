@@ -177,9 +177,9 @@ export async function fetchFromAshby(
 
         if(!res.ok){
 
-            console.log(
-                `Ashby unavailable: ${companyName}`
-            );
+            // console.log(
+            //     `Ashby unavailable: ${companyName}`
+            // );
 
             return [];
 
@@ -259,10 +259,10 @@ export async function fetchFromAshby(
     catch(error){
 
 
-        console.log(
-            `Ashby failed: ${companyName}`,
-            error
-        );
+        // console.log(
+        //     `Ashby failed: ${companyName}`,
+        //     error
+        // );
 
 
         return [];

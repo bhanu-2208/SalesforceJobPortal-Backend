@@ -52,7 +52,7 @@ export default function requireAuth(
 
     next();
   } catch (err) {
-    console.error("JWT Verify Error:", err);
+    // console.error("JWT Verify Error:", err);
 
     res.status(401).json({
       success: false,

@@ -73,9 +73,9 @@ export async function fetchFromTeamtailor(
 
         if(!res.ok){
 
-            console.log(
-                `Teamtailor unavailable: ${companyName}`
-            );
+            // console.log(
+            //     `Teamtailor unavailable: ${companyName}`
+            // );
 
             return [];
 
@@ -155,10 +155,10 @@ export async function fetchFromTeamtailor(
     catch(error){
 
 
-        console.log(
-            `Teamtailor failed: ${companyName}`,
-            error
-        );
+        // console.log(
+        //     `Teamtailor failed: ${companyName}`,
+        //     error
+        // );
 
 
         return [];

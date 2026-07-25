@@ -156,10 +156,10 @@ export async function fetchFromGreenhouse(
     }
     catch(error){
 
-        console.log(
-          "Greenhouse failed:",
-          companyName
-        );
+        // console.log(
+        //   "Greenhouse failed:",
+        //   companyName
+        // );
 
         return [];
 
