@@ -31,8 +31,8 @@ export async function seedATSCompanies(){
     }
 
 
-    console.log(
-        `✅ ATS companies loaded: ${companies.length}`
-    );
+    // console.log(
+    //     `✅ ATS companies loaded: ${companies.length}`
+    // );
 
 }

@@ -101,18 +101,18 @@ export async function fetchCompanyJobs(){
 
 
 
-            console.log(
-                `${company.name}: ${result.length} jobs`
-            );
+            // console.log(
+            //     `${company.name}: ${result.length} jobs`
+            // );
 
 
         }
         catch(error){
 
-            console.log(
-                `Failed ${company.name}`,
-                error
-            );
+            // console.log(
+            //     `Failed ${company.name}`,
+            //     error
+            // );
 
         }
 
