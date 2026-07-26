@@ -22,6 +22,10 @@ import {
 } from "./src/services/companyRegistry.service";
 import rateLimit from "express-rate-limit";
 
+
+app.set("trust proxy", 1);
+
+
 // Strict — login/register are high-abuse targets (brute force, spam accounts)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
