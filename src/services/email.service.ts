@@ -1,14 +1,25 @@
 // services/email.service.ts
 // Free email sending via Gmail SMTP using Nodemailer.
 // No paid service needed — Gmail allows ~500 emails/day for free.
-
+import dns from "node:dns";
 import nodemailer from "nodemailer";
 
+dns.setDefaultResultOrder("ipv4first");
+
+// const transporter = nodemailer.createTransport({
+//   service: "gmail",
+//   auth: {
+//     user: process.env.EMAIL_USER,          // your Gmail address
+//     pass: process.env.EMAIL_APP_PASSWORD,  // Gmail App Password (not your normal password)
+//   },
+// });
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // true only for port 465
   auth: {
-    user: process.env.EMAIL_USER,          // your Gmail address
-    pass: process.env.EMAIL_APP_PASSWORD,  // Gmail App Password (not your normal password)
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_APP_PASSWORD,
   },
 });
 
