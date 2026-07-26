@@ -26,6 +26,7 @@ import rateLimit from "express-rate-limit";
 const app  = express();
 
 app.set("trust proxy", 1);
+console.log("Trust proxy value:", app.get("trust proxy"));
 
 
 // Strict — login/register are high-abuse targets (brute force, spam accounts)
@@ -33,6 +34,9 @@ const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
   message: { success: false, message: "Too many attempts. Please try again later." },
+  validate: {
+    xForwardedForHeader: false,
+  }
 });
 
 // Moderate — general API browsing (jobs, companies, saved jobs) needs headroom
