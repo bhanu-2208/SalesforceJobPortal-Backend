@@ -23,6 +23,8 @@ import {
 import rateLimit from "express-rate-limit";
 
 
+const app  = express();
+
 app.set("trust proxy", 1);
 
 
@@ -52,7 +54,6 @@ const scraperLimiter = rateLimit({
   max: 5,
 });
 
-const app  = express();
 const PORT = process.env.PORT || 4000;
 
 // ── Connect to MongoDB ───────────────────────────────────────────────
