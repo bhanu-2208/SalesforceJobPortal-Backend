@@ -65,20 +65,22 @@ router.post("/cron", async (req, res) => {
     });
   }
 
-  // Respond immediately
-  res.status(200).json({
-    success: true,
-    message: "Scraper started",
-  });
+  try {
+    const result = await runJobImport();
 
-  // Run in the background
-  runJobImport()
-    .then(() => {
-      console.log("✅ Scheduled import completed");
-    })
-    .catch((err) => {
-      console.error("❌ Scheduled import failed:", err);
+    res.status(200).json({
+      success: true,
+      message: "Job import completed",
+      imported: result.imported,
+      skipped: result.skipped,
+      rejected: result.rejected,
     });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
 });
 
 export default router;
