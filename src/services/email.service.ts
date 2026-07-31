@@ -1,18 +1,36 @@
-// // services/email.service.ts
-// // Free email sending via Gmail SMTP using Nodemailer.
-// // No paid service needed — Gmail allows ~500 emails/day for free.
-// import dns from "node:dns";
-// import nodemailer from "nodemailer";
+// services/email.service.ts
+// Free email sending via Gmail SMTP using Nodemailer.
+// No paid service needed — Gmail allows ~500 emails/day for free.
+import dns from "node:dns";
+import nodemailer from "nodemailer";
 
-// dns.setDefaultResultOrder("ipv4first");
+dns.setDefaultResultOrder("ipv4first");
 
-// // const transporter = nodemailer.createTransport({
-// //   service: "gmail",
-// //   auth: {
-// //     user: process.env.EMAIL_USER,          // your Gmail address
-// //     pass: process.env.EMAIL_APP_PASSWORD,  // Gmail App Password (not your normal password)
-// //   },
-// // });
+// const transporter = nodemailer.createTransport({
+//   service: "gmail",
+//   auth: {
+//     user: process.env.EMAIL_USER,          // your Gmail address
+//     pass: process.env.EMAIL_APP_PASSWORD,  // Gmail App Password (not your normal password)
+//   },
+// });
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
+
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_APP_PASSWORD,
+  },
+
+  tls: {
+    rejectUnauthorized: false,
+  },
+
+  connectionTimeout: 15000,
+  greetingTimeout: 15000,
+  socketTimeout: 15000,
+});
 // const transporter = nodemailer.createTransport({
 //   host: "smtp.gmail.com",
 //   port: 587,
@@ -27,220 +45,40 @@
 //   socketTimeout: 30000,
 // });
 
-// export async function sendOtpEmail(to: string, name: string, otp: string): Promise<void> {
-//   await transporter.sendMail({
-//     from: `"TalentCloud" <${process.env.EMAIL_USER}>`,
-//     to,
-//     subject: "Verify your TalentCloud account",
-//     html: `
-//       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
-//         <h2 style="color: #0070C0;">Welcome to TalentCloud, ${name}!</h2>
-//         <p style="color: #333; font-size: 15px;">
-//           Use the code below to verify your email address. This code expires in 10 minutes.
-//         </p>
-//         <div style="background: #E6F6FD; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;">
-//           <span style="font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #0070C0;">${otp}</span>
-//         </div>
-//         <p style="color: #888; font-size: 13px;">
-//           If you didn't create an account with TalentCloud, you can safely ignore this email.
-//         </p>
-//       </div>
-//     `,
-//   });
-// }
-
-// export async function sendWelcomeEmail(to: string, name: string): Promise<void> {
-//   await transporter.sendMail({
-//     from: `"TalentCloud" <${process.env.EMAIL_USER}>`,
-//     to,
-//     subject: "Your account is verified! 🎉",
-//     html: `
-//       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
-//         <h2 style="color: #0070C0;">You're all set, ${name}!</h2>
-//         <p style="color: #333; font-size: 15px;">
-//           Your TalentCloud account is now verified. Start browsing Salesforce jobs today.
-//         </p>
-//       </div>
-//     `,
-//   });
-// }
-
-// services/email.service.ts
-// Email sending via Gmail SMTP using Nodemailer.
-
-import nodemailer from "nodemailer";
-import SMTPTransport from "nodemailer/lib/smtp-transport";
-
-
-const transporter = nodemailer.createTransport(
-  {
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-
-    // Force IPv4 to avoid Render IPv6 SMTP timeout issue
-    family: 4,
-
-    requireTLS: true,
-
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_APP_PASSWORD,
-    },
-
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
-    socketTimeout: 15000,
-
-  } as SMTPTransport.Options
-);
-
-
-// Check SMTP connection when server starts
-transporter.verify((error) => {
-  if (error) {
-    console.error("❌ SMTP Connection Failed:", error);
-  } else {
-    console.log("✅ SMTP Server Ready");
-  }
-});
-
-
-
-export async function sendOtpEmail(
-  to: string,
-  name: string,
-  otp: string
-): Promise<void> {
-
-  try {
-
-    await transporter.sendMail({
-
-      from: `"TalentCloud" <${process.env.EMAIL_USER}>`,
-
-      to,
-
-      subject: "Verify your TalentCloud account",
-
-      html: `
-        <div style="
-          font-family: Arial, sans-serif;
-          max-width: 480px;
-          margin: 0 auto;
-          padding: 24px;
-        ">
-
-          <h2 style="color:#0070C0;">
-            Welcome to TalentCloud, ${name}!
-          </h2>
-
-
-          <p style="
-            color:#333;
-            font-size:15px;
-          ">
-            Use the code below to verify your email address.
-            This code expires in 10 minutes.
-          </p>
-
-
-          <div style="
-            background:#E6F6FD;
-            border-radius:8px;
-            padding:20px;
-            text-align:center;
-            margin:20px 0;
-          ">
-
-            <span style="
-              font-size:32px;
-              font-weight:800;
-              letter-spacing:8px;
-              color:#0070C0;
-            ">
-              ${otp}
-            </span>
-
-          </div>
-
-
-          <p style="
-            color:#888;
-            font-size:13px;
-          ">
-            If you didn't create an account with TalentCloud,
-            you can safely ignore this email.
-          </p>
-
+export async function sendOtpEmail(to: string, name: string, otp: string): Promise<void> {
+  await transporter.sendMail({
+    from: `"TalentCloud" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: "Verify your TalentCloud account",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+        <h2 style="color: #0070C0;">Welcome to TalentCloud, ${name}!</h2>
+        <p style="color: #333; font-size: 15px;">
+          Use the code below to verify your email address. This code expires in 10 minutes.
+        </p>
+        <div style="background: #E6F6FD; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0;">
+          <span style="font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #0070C0;">${otp}</span>
         </div>
-      `,
-    });
-
-
-    console.log(`✅ OTP email sent to ${to}`);
-
-
-  } catch (error) {
-
-    console.error("❌ OTP Email Error:", error);
-
-    throw error;
-  }
+        <p style="color: #888; font-size: 13px;">
+          If you didn't create an account with TalentCloud, you can safely ignore this email.
+        </p>
+      </div>
+    `,
+  });
 }
 
-
-
-
-
-export async function sendWelcomeEmail(
-  to: string,
-  name: string
-): Promise<void> {
-
-  try {
-
-    await transporter.sendMail({
-
-      from: `"TalentCloud" <${process.env.EMAIL_USER}>`,
-
-      to,
-
-      subject: "Your account is verified! 🎉",
-
-      html: `
-        <div style="
-          font-family: Arial, sans-serif;
-          max-width:480px;
-          margin:0 auto;
-          padding:24px;
-        ">
-
-          <h2 style="color:#0070C0;">
-            You're all set, ${name}!
-          </h2>
-
-
-          <p style="
-            color:#333;
-            font-size:15px;
-          ">
-            Your TalentCloud account is now verified.
-            Start browsing Salesforce jobs today.
-          </p>
-
-        </div>
-      `,
-    });
-
-
-    console.log(`✅ Welcome email sent to ${to}`);
-
-
-  } catch (error) {
-
-    console.error("❌ Welcome Email Error:", error);
-
-    throw error;
-  }
+export async function sendWelcomeEmail(to: string, name: string): Promise<void> {
+  await transporter.sendMail({
+    from: `"TalentCloud" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: "Your account is verified! 🎉",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+        <h2 style="color: #0070C0;">You're all set, ${name}!</h2>
+        <p style="color: #333; font-size: 15px;">
+          Your TalentCloud account is now verified. Start browsing Salesforce jobs today.
+        </p>
+      </div>
+    `,
+  });
 }
