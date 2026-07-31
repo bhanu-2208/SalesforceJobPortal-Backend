@@ -83,70 +83,124 @@
 //   });
 // }
 
-import { Resend } from "resend";
+// services/email.service.ts
+
+import nodemailer from "nodemailer";
 
 
-const resend = new Resend(
-  process.env.RESEND_API_KEY
-);
+const transporter = nodemailer.createTransport({
+
+  host: "smtp-relay.brevo.com",
+
+  port: 587,
+
+  secure: false,
+
+  auth: {
+    user: process.env.BREVO_SMTP_USER,
+    pass: process.env.BREVO_SMTP_KEY,
+  },
+
+});
+
+
+
+// Check connection
+transporter.verify((error) => {
+
+  if(error){
+
+    console.error(
+      "❌ Brevo SMTP Connection Failed:",
+      error
+    );
+
+  }else{
+
+    console.log(
+      "✅ Brevo SMTP Server Ready"
+    );
+
+  }
+
+});
 
 
 
 export async function sendOtpEmail(
-  to: string,
-  name: string,
-  otp: string
-): Promise<void> {
+  to:string,
+  name:string,
+  otp:string
+):Promise<void>{
 
-  try {
-
-    const result = await resend.emails.send({
-
-      from: "TalentCloud <onboarding@resend.dev>",
-
-      to: [to],
-
-      subject: "Verify your TalentCloud account",
-
-      html: `
-        <div style="font-family:Arial;padding:20px">
-
-          <h2>
-            Welcome to TalentCloud, ${name}
-          </h2>
-
-          <p>
-            Your OTP verification code is:
-          </p>
+  try{
 
 
-          <h1 style="
-            color:#0070C0;
-            letter-spacing:8px;
-          ">
-            ${otp}
-          </h1>
+    await transporter.sendMail({
+
+      from: `"TalentCloud" <${process.env.BREVO_SMTP_USER}>`,
+
+      to,
+
+      subject:"Verify your TalentCloud account",
+
+      html:`
+
+      <div style="
+        font-family:Arial;
+        max-width:480px;
+        margin:auto;
+        padding:20px;
+      ">
+
+        <h2 style="color:#0070C0">
+          Welcome to TalentCloud, ${name}!
+        </h2>
 
 
-          <p>
-            This OTP expires in 10 minutes.
-          </p>
+        <p>
+          Use this OTP to verify your account:
+        </p>
 
-        </div>
+
+        <h1 style="
+          letter-spacing:8px;
+          color:#0070C0;
+        ">
+          ${otp}
+        </h1>
+
+
+        <p>
+          This OTP expires in 10 minutes.
+        </p>
+
+
+      </div>
+
       `
+
     });
 
 
-    console.log("✅ OTP email sent", result);
+    console.log(
+      `✅ OTP email sent to ${to}`
+    );
 
 
-  } catch(error){
+  }catch(error){
 
-    console.error("❌ OTP email error:", error);
+    console.error(
+      "❌ OTP Email Error:",
+      error
+    );
 
     throw error;
+
   }
+
 }
+
 
 
 
@@ -156,36 +210,55 @@ export async function sendWelcomeEmail(
   name:string
 ):Promise<void>{
 
-  try {
+  try{
 
-    await resend.emails.send({
 
-      from:"TalentCloud <onboarding@resend.dev>",
+    await transporter.sendMail({
 
-      to:[to],
+      from:`"TalentCloud" <${process.env.BREVO_SMTP_USER}>`,
+
+      to,
 
       subject:"Your TalentCloud account is verified 🎉",
 
       html:`
+
+      <div style="
+        font-family:Arial;
+        padding:20px;
+      ">
+
         <h2>
-          Welcome ${name}
+          You're all set, ${name}!
         </h2>
 
+
         <p>
-          Your account has been verified successfully.
+          Your TalentCloud account has been verified successfully.
         </p>
+
+
+      </div>
+
       `
+
     });
 
 
-    console.log("✅ Welcome email sent");
+    console.log(
+      `✅ Welcome email sent to ${to}`
+    );
 
 
-  } catch(error){
+  }catch(error){
 
-    console.error("❌ Welcome email error:",error);
+    console.error(
+      "❌ Welcome Email Error:",
+      error
+    );
 
     throw error;
+
   }
 
 }
