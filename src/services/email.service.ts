@@ -85,102 +85,74 @@
 
 // services/email.service.ts
 
-import nodemailer from "nodemailer";
+import axios from "axios";
 
 
-const transporter = nodemailer.createTransport({
-
-  host: "smtp-relay.brevo.com",
-
-  port: 587,
-
-  secure: false,
-
-  auth: {
-    user: process.env.BREVO_SMTP_USER,
-    pass: process.env.BREVO_SMTP_KEY,
-  },
-
-});
-
-
-
-// Check connection
-transporter.verify((error) => {
-
-  if(error){
-
-    console.error(
-      "❌ Brevo SMTP Connection Failed:",
-      error
-    );
-
-  }else{
-
-    console.log(
-      "✅ Brevo SMTP Server Ready"
-    );
-
-  }
-
-});
+const BREVO_API_URL =
+  "https://api.brevo.com/v3/smtp/email";
 
 
 
 export async function sendOtpEmail(
-  to:string,
-  name:string,
-  otp:string
-):Promise<void>{
+  to: string,
+  name: string,
+  otp: string
+): Promise<void> {
 
-  try{
+  try {
 
+    await axios.post(
+      BREVO_API_URL,
 
-    await transporter.sendMail({
+      {
+        sender: {
+          name: "TalentCloud",
+          email: process.env.BREVO_SENDER_EMAIL,
+        },
 
-      from: `"TalentCloud" <${process.env.BREVO_SMTP_USER}>`,
+        to: [
+          {
+            email: to,
+            name: name,
+          },
+        ],
 
-      to,
+        subject:
+          "Verify your TalentCloud account",
 
-      subject:"Verify your TalentCloud account",
+        htmlContent: `
+          <div style="font-family:Arial;padding:20px">
 
-      html:`
+            <h2 style="color:#0070C0">
+              Welcome to TalentCloud, ${name}!
+            </h2>
 
-      <div style="
-        font-family:Arial;
-        max-width:480px;
-        margin:auto;
-        padding:20px;
-      ">
+            <p>
+              Your OTP verification code is:
+            </p>
 
-        <h2 style="color:#0070C0">
-          Welcome to TalentCloud, ${name}!
-        </h2>
+            <h1 style="
+              letter-spacing:8px;
+              color:#0070C0;
+            ">
+              ${otp}
+            </h1>
 
+            <p>
+              This OTP expires in 10 minutes.
+            </p>
 
-        <p>
-          Use this OTP to verify your account:
-        </p>
+          </div>
+        `,
+      },
 
-
-        <h1 style="
-          letter-spacing:8px;
-          color:#0070C0;
-        ">
-          ${otp}
-        </h1>
-
-
-        <p>
-          This OTP expires in 10 minutes.
-        </p>
-
-
-      </div>
-
-      `
-
-    });
+      {
+        headers: {
+          "api-key": process.env.BREVO_API_KEY,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
 
     console.log(
@@ -188,11 +160,11 @@ export async function sendOtpEmail(
     );
 
 
-  }catch(error){
+  } catch(error:any) {
 
     console.error(
       "❌ OTP Email Error:",
-      error
+      error.response?.data || error.message
     );
 
     throw error;
@@ -204,45 +176,64 @@ export async function sendOtpEmail(
 
 
 
-
 export async function sendWelcomeEmail(
-  to:string,
-  name:string
-):Promise<void>{
+  to: string,
+  name: string
+): Promise<void> {
 
-  try{
+  try {
 
+    await axios.post(
 
-    await transporter.sendMail({
+      BREVO_API_URL,
 
-      from:`"TalentCloud" <${process.env.BREVO_SMTP_USER}>`,
+      {
 
-      to,
-
-      subject:"Your TalentCloud account is verified 🎉",
-
-      html:`
-
-      <div style="
-        font-family:Arial;
-        padding:20px;
-      ">
-
-        <h2>
-          You're all set, ${name}!
-        </h2>
+        sender:{
+          name:"TalentCloud",
+          email:process.env.BREVO_SENDER_EMAIL,
+        },
 
 
-        <p>
-          Your TalentCloud account has been verified successfully.
-        </p>
+        to:[
+          {
+            email:to,
+            name:name,
+          },
+        ],
 
 
-      </div>
+        subject:
+          "Your TalentCloud account is verified 🎉",
 
-      `
 
-    });
+        htmlContent:`
+
+          <div style="font-family:Arial;padding:20px">
+
+            <h2>
+              You're all set, ${name}!
+            </h2>
+
+            <p>
+              Your TalentCloud account has been verified successfully.
+            </p>
+
+          </div>
+
+        `,
+
+      },
+
+
+      {
+        headers:{
+          "api-key":process.env.BREVO_API_KEY,
+          "Content-Type":"application/json",
+        },
+      }
+
+    );
 
 
     console.log(
@@ -250,11 +241,11 @@ export async function sendWelcomeEmail(
     );
 
 
-  }catch(error){
+  } catch(error:any){
 
     console.error(
       "❌ Welcome Email Error:",
-      error
+      error.response?.data || error.message
     );
 
     throw error;
