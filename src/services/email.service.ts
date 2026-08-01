@@ -94,34 +94,51 @@ export async function sendOtpEmail(
   name: string,
   otp: string
 ): Promise<void> {
-  await axios.post(
-    API_URL,
-    {
-      sender: {
-        name: "TalentCloud",
-        email: process.env.BREVO_SENDER_EMAIL,
-      },
-      to: [
-        {
-          email: to,
-          name,
+  try {
+    console.log("BREVO_API_KEY exists:", !!process.env.BREVO_API_KEY);
+    console.log("BREVO_SENDER_EMAIL:", process.env.BREVO_SENDER_EMAIL);
+
+    const response = await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      {
+        sender: {
+          name: "TalentCloud",
+          email: process.env.BREVO_SENDER_EMAIL,
         },
-      ],
-      subject: "Verify your TalentCloud account",
-      htmlContent: `
-        <h2>Welcome ${name}</h2>
-        <p>Your OTP is:</p>
-        <h1>${otp}</h1>
-        <p>This OTP expires in 10 minutes.</p>
-      `,
-    },
-    {
-      headers: {
-        "api-key": process.env.BREVO_API_KEY,
-        "Content-Type": "application/json",
+        to: [
+          {
+            email: to,
+            name,
+          },
+        ],
+        subject: "Verify your TalentCloud account",
+        htmlContent: `
+          <h2>Welcome ${name}</h2>
+          <p>Your OTP is:</p>
+          <h1>${otp}</h1>
+          <p>This OTP expires in 10 minutes.</p>
+        `,
       },
-    }
-  );
+      {
+        headers: {
+          "api-key": process.env.BREVO_API_KEY!,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      }
+    );
+
+    console.log("Brevo Success:", response.data);
+  } catch (error: any) {
+    console.error("========== BREVO ERROR ==========");
+    console.error("Status:", error.response?.status);
+    console.error("Data:", error.response?.data);
+    console.error("Headers:", error.response?.headers);
+    console.error("Message:", error.message);
+    console.error("================================");
+
+    throw error;
+  }
 }
 
 export async function sendWelcomeEmail(
