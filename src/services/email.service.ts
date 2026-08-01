@@ -87,169 +87,71 @@
 
 import axios from "axios";
 
-
-const BREVO_API_URL =
-  "https://api.brevo.com/v3/smtp/email";
-
-
+const API_URL = "https://api.brevo.com/v3/smtp/email";
 
 export async function sendOtpEmail(
   to: string,
   name: string,
   otp: string
 ): Promise<void> {
-
-  try {
-
-    await axios.post(
-      BREVO_API_URL,
-
-      {
-        sender: {
-          name: "TalentCloud",
-          email: process.env.BREVO_SENDER_EMAIL,
-        },
-
-        to: [
-          {
-            email: to,
-            name: name,
-          },
-        ],
-
-        subject:
-          "Verify your TalentCloud account",
-
-        htmlContent: `
-          <div style="font-family:Arial;padding:20px">
-
-            <h2 style="color:#0070C0">
-              Welcome to TalentCloud, ${name}!
-            </h2>
-
-            <p>
-              Your OTP verification code is:
-            </p>
-
-            <h1 style="
-              letter-spacing:8px;
-              color:#0070C0;
-            ">
-              ${otp}
-            </h1>
-
-            <p>
-              This OTP expires in 10 minutes.
-            </p>
-
-          </div>
-        `,
+  await axios.post(
+    API_URL,
+    {
+      sender: {
+        name: "TalentCloud",
+        email: process.env.BREVO_SENDER_EMAIL,
       },
-
-      {
-        headers: {
-          "api-key": process.env.BREVO_API_KEY,
-          "Content-Type": "application/json",
+      to: [
+        {
+          email: to,
+          name,
         },
-      }
-    );
-
-
-    console.log(
-      `✅ OTP email sent to ${to}`
-    );
-
-
-  } catch(error:any) {
-
-    console.error(
-      "❌ OTP Email Error:",
-      error.response?.data || error.message
-    );
-
-    throw error;
-
-  }
-
+      ],
+      subject: "Verify your TalentCloud account",
+      htmlContent: `
+        <h2>Welcome ${name}</h2>
+        <p>Your OTP is:</p>
+        <h1>${otp}</h1>
+        <p>This OTP expires in 10 minutes.</p>
+      `,
+    },
+    {
+      headers: {
+        "api-key": process.env.BREVO_API_KEY,
+        "Content-Type": "application/json",
+      },
+    }
+  );
 }
-
-
-
 
 export async function sendWelcomeEmail(
   to: string,
   name: string
 ): Promise<void> {
-
-  try {
-
-    await axios.post(
-
-      BREVO_API_URL,
-
-      {
-
-        sender:{
-          name:"TalentCloud",
-          email:process.env.BREVO_SENDER_EMAIL,
-        },
-
-
-        to:[
-          {
-            email:to,
-            name:name,
-          },
-        ],
-
-
-        subject:
-          "Your TalentCloud account is verified 🎉",
-
-
-        htmlContent:`
-
-          <div style="font-family:Arial;padding:20px">
-
-            <h2>
-              You're all set, ${name}!
-            </h2>
-
-            <p>
-              Your TalentCloud account has been verified successfully.
-            </p>
-
-          </div>
-
-        `,
-
+  await axios.post(
+    API_URL,
+    {
+      sender: {
+        name: "TalentCloud",
+        email: process.env.BREVO_SENDER_EMAIL,
       },
-
-
-      {
-        headers:{
-          "api-key":process.env.BREVO_API_KEY,
-          "Content-Type":"application/json",
+      to: [
+        {
+          email: to,
+          name,
         },
-      }
-
-    );
-
-
-    console.log(
-      `✅ Welcome email sent to ${to}`
-    );
-
-
-  } catch(error:any){
-
-    console.error(
-      "❌ Welcome Email Error:",
-      error.response?.data || error.message
-    );
-
-    throw error;
-
-  }
-
+      ],
+      subject: "Welcome to TalentCloud",
+      htmlContent: `
+        <h2>Hello ${name}</h2>
+        <p>Your account has been verified successfully.</p>
+      `,
+    },
+    {
+      headers: {
+        "api-key": process.env.BREVO_API_KEY,
+        "Content-Type": "application/json",
+      },
+    }
+  );
 }
