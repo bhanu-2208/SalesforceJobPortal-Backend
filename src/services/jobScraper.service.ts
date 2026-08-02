@@ -10,6 +10,8 @@ import { evaluateSalesforceJob } from "./salesforceFilter";
 
 import { fetchCompanyJobs } from "./atsJob.service";
 
+
+let isImportRunning = false;
 interface RawExternalJob {
   sourceId: string;
   source: string;
@@ -744,6 +746,20 @@ async function loadJobs(): Promise<RawExternalJob[]> {
 // ─────────────────────────────────────────────────────────────
 
 export async function runJobImport(): Promise<ImportStats> {
+  if (isImportRunning) {
+    console.log("⚠️ Import already running. Skipping.");
+    
+    return {
+      imported:0,
+      skipped:0,
+      rejected:0,
+      errors:0
+    };
+  }
+
+
+  isImportRunning = true;
+
   console.log("\n========================================");
   console.log("🚀 Starting Salesforce Job Import");
   console.log("========================================\n");
