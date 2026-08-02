@@ -59,7 +59,7 @@ interface ImportStats {
   errors: number;
 }
 
-const MAX_IMPORTS = 500;
+const MAX_IMPORTS = 200;
 
 const COMPANY_CACHE = new Map<string, any>();
 
@@ -931,7 +931,7 @@ export async function runJobImport(): Promise<ImportStats> {
   // console.log(`Errors    : ${errors}`);
 
   //   console.log("========================================\n");
-
+  COMPANY_CACHE.clear();
   return {
     imported,
     skipped,
