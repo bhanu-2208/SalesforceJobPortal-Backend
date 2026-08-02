@@ -578,35 +578,19 @@ return JSON.parse(cleaned);
 
 
 }
-catch(error){
+catch (error: any) {
+    console.error(
+        `AI parsing failed for ${raw.title}: ${error?.message || error}`
+    );
 
-
-console.log(
-"AI parsing failed",
-error
-);
-
-
-return {
-
-workMode:null,
-
-experienceLevel:null,
-
-roleCategory:"Salesforce",
-
-skills:[
-"Salesforce"
-],
-
-employmentType:"Full-time",
-
-description:
-raw.description
-
-};
-
-
+    return {
+        workMode: null,
+        experienceLevel: null,
+        roleCategory: "Salesforce",
+        skills: ["Salesforce"],
+        employmentType: "Full-time",
+        description: raw.description,
+    };
 }
 
 

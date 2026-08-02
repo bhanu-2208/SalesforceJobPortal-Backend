@@ -56,6 +56,11 @@ router.post(
 // );
 
 router.post("/cron", async (req, res) => {
+  console.log(
+    "🔥 CRON REQUEST RECEIVED",
+    new Date().toISOString()
+  );
+
   const secret = req.header("x-scraper-secret");
 
   if (secret !== process.env.SCRAPER_SECRET) {
@@ -75,6 +80,26 @@ router.post("/cron", async (req, res) => {
       skipped: result.skipped,
       rejected: result.rejected,
     });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+});
+
+router.get("/run-now", async (_req, res) => {
+  try {
+    const result = await runJobImport();
+
+    res.status(200).json({
+      success: true,
+      message: "Job import completed",
+      imported: result.imported,
+      skipped: result.skipped,
+      rejected: result.rejected,
+    });
+
   } catch (err: any) {
     res.status(500).json({
       success: false,

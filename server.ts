@@ -104,7 +104,7 @@ app.use("/api/applied-jobs",     generalLimiter, appliedjobs);
 app.use("/api/candidates",       generalLimiter, candidatesRoutes);
 app.use("/api/saved-candidates", generalLimiter, savedCandidatesRoutes);
 app.use("/api/ats",              generalLimiter, atsRoutes);
-app.use("/api/scraper",          scraperLimiter, scraperRouter);
+app.use("/api/scraper",          scraperRouter);
 
 // Health check
 app.get("/health", (_req, res) => {
