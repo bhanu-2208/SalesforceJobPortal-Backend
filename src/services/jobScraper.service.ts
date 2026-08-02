@@ -232,7 +232,7 @@ ${raw.location ?? "Unknown"}
 
 Description:
 
-${raw.description}
+${raw.description.slice(0, 6000)}
 
 
 ================================================
