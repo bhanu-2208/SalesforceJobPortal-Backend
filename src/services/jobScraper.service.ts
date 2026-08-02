@@ -41,7 +41,7 @@ interface AIEnrichment {
 
   roleCategory: string | null;
 
-  skills: string[];
+  skills: any;
 
   employmentType:
     | "Full-time"
@@ -73,6 +73,52 @@ function slugify(text: string): string {
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-");
+}
+
+function normalizeSkills(skills: any): string[] {
+
+  if (!skills) return [];
+
+
+  // Already flat array
+  if (
+    Array.isArray(skills) &&
+    skills.every(skill => typeof skill === "string")
+  ) {
+    return skills;
+  }
+
+
+  // Gemini category object inside array
+  if (
+    Array.isArray(skills) &&
+    typeof skills[0] === "object"
+  ) {
+
+    return Object.values(skills[0])
+      .flat()
+      .filter(
+        (skill): skill is string =>
+          typeof skill === "string"
+      );
+  }
+
+
+  // Gemini object directly
+  if (
+    typeof skills === "object"
+  ) {
+
+    return Object.values(skills)
+      .flat()
+      .filter(
+        (skill): skill is string =>
+          typeof skill === "string"
+      );
+  }
+
+
+  return [];
 }
 
 function convertExperienceLevel(
@@ -199,58 +245,69 @@ async function enrichWithAI(
 
 const prompt = `
 
-You are a senior technical recruiter working for a Salesforce hiring platform.
+You are an expert Salesforce technical recruiter and job data extraction engine.
 
-Your job is to analyze a raw job description from ATS systems
-(Greenhouse, Lever, Ashby, SmartRecruiters, Teamtailor).
+You work for a Salesforce-focused job marketplace.
 
-The description may contain:
-- HTML artifacts
-- duplicated text
-- incomplete sentences
-- marketing content
-- unrelated company information
+Your task is to analyze raw ATS job data and convert it into a clean structured JSON record.
 
-Extract ONLY information relevant to the job.
+Your output will be directly stored in MongoDB.
 
-Return ONLY valid JSON.
-No markdown.
-No explanation.
+Accuracy is more important than completeness.
+
+NEVER invent information.
 
 ================================================
-
-JOB INFORMATION
+JOB INPUT
+================================================
 
 Title:
 ${raw.title}
 
-
 Company:
 ${raw.companyName}
-
 
 Location:
 ${raw.location ?? "Unknown"}
 
+Job Description:
 
-Description:
-
-${raw.description.slice(0, 6000)}
+${raw.description.slice(0, 8000)}
 
 
 ================================================
+STRICT OUTPUT RULES
+================================================
+
+Return ONLY valid JSON.
+
+Do not use markdown.
+
+Do not add explanations.
+
+Do not wrap JSON inside code blocks.
+
+All missing information must be:
+
+Arrays:
+[]
+
+Unknown values:
+null
 
 
-Return this EXACT JSON:
-
+================================================
+OUTPUT JSON FORMAT
+================================================
 
 {
-"title":"",
-"normalizedTitle":"",
+"title": "",
+"normalizedTitle": "",
 
-"roleCategory":"",
+"roleCategory": "",
 
-"seniority":
+
+"seniority": 
 "Intern" |
 "Fresher" |
 "Associate" |
@@ -260,10 +317,10 @@ Return this EXACT JSON:
 null,
 
 
-"experienceYears":
+"experienceLevel":
 {
-"min":number|null,
-"max":number|null
+"minYears": null,
+"maxYears": null
 },
 
 
@@ -282,115 +339,100 @@ null,
 null,
 
 
-"skills":{
+"skills": [],
 
-"salesforce":[
-],
 
-"programming":[
-],
-
-"cloud":[
-],
-
-"database":[
-],
-
-"frontend":[
-],
-
-"backend":[
-],
-
-"devops":[
-],
-
-"tools":[
-],
-
-"other":[
-
-]
-
+"salesforceExpertise":
+{
+"products": [],
+"development": [],
+"administration": [],
+"automation": [],
+"data": [],
+"integrations": [],
+"testing": [],
+"certifications": []
 },
 
 
-"salesforceExpertise":{
-
-"products":[
-],
-
-"development":[
-],
-
-"administration":[
-],
-
-"certifications":[
-]
-
-},
+"programmingSkills": [],
 
 
-"responsibilities":[
-],
+"cloudSkills": [],
 
 
-"requirements":[
-],
+"databaseSkills": [],
 
 
-"niceToHave":[
-],
+"devopsSkills": [],
 
 
-"benefits":[
-],
+"tools": [],
 
 
-"description":""
+"responsibilities": [],
+
+
+"requirements": [],
+
+
+"niceToHave": [],
+
+
+"description": ""
 
 }
 
 
 ================================================
+EXTRACTION RULES
+================================================
 
 
-EXTRACTION RULES:
+TITLE NORMALIZATION:
 
-
-TITLE:
-
-Convert titles into standard hiring titles.
+Convert vague titles into Salesforce-specific professional titles.
 
 Examples:
 
-"Business Systems Engineer II"
-=
-"Salesforce Business Systems Engineer"
+
+Input:
+CRM Developer
+
+Output:
+Salesforce Developer
 
 
-"CRM Developer"
-=
-"Salesforce Developer"
+Input:
+Business Systems Engineer II
+
+Output:
+Salesforce Business Systems Engineer
 
 
+Input:
+Application Engineer
 
-------------------------------------------------
-
-
-SALESFORCE SKILLS:
-
-Extract ALL Salesforce technologies.
+Output:
+Salesforce Application Engineer
 
 
-Include:
+Do not change the seniority level.
+
+================================================
+
+
+SALESFORCE SKILL EXTRACTION
+================================================
+
+Extract ONLY Salesforce-related technologies explicitly mentioned or clearly required.
+
 
 Development:
 
 Apex
 Lightning Web Components
-Aura
+Aura Components
 Visualforce
 SOQL
 SOSL
@@ -399,10 +441,13 @@ Batch Apex
 Queueable Apex
 REST API
 SOAP API
+Salesforce DX
+Salesforce CLI
 
 
 Automation:
 
+Salesforce Flow
 Flow Builder
 Process Builder
 Workflow Rules
@@ -418,15 +463,17 @@ Roles
 Sharing Rules
 Reports
 Dashboards
+Security Model
 
 
-Cloud:
+Salesforce Clouds:
 
 Sales Cloud
 Service Cloud
 Experience Cloud
 Marketing Cloud
 Commerce Cloud
+Data Cloud
 CPQ
 Field Service
 
@@ -446,13 +493,11 @@ Test Classes
 Code Coverage
 
 
+================================================
+PROGRAMMING SKILLS
+================================================
 
-------------------------------------------------
-
-
-PROGRAMMING SKILLS:
-
-Extract:
+Extract only if mentioned:
 
 Java
 JavaScript
@@ -464,98 +509,159 @@ HTML
 CSS
 
 
-------------------------------------------------
+================================================
+CLOUD / DEVOPS
+================================================
 
-
-CLOUD:
-
-Extract:
+Extract only if mentioned:
 
 AWS
 Azure
 GCP
-Lambda
-EC2
 Docker
 Kubernetes
+CI/CD
+GitHub Actions
+Jenkins
+Terraform
 
 
-------------------------------------------------
+================================================
+DATABASE
+================================================
 
-
-DATABASE:
-
-Extract:
+Extract only if mentioned:
 
 MongoDB
 PostgreSQL
 MySQL
 Oracle
 Redis
+SQL Server
 
 
-------------------------------------------------
+================================================
+TOOLS
+================================================
+
+Extract:
+
+Jira
+Git
+GitHub
+Bitbucket
+VS Code
+Postman
+MuleSoft
+Copado
+Gearset
 
 
-DO NOT INVENT SKILLS.
+================================================
+SKILL RULES
+================================================
 
-Only return skills explicitly mentioned
-or clearly required.
+VERY IMPORTANT:
+
+1. Never infer skills from job title alone.
+
+Example:
+
+"Salesforce Developer"
+
+Does NOT automatically mean:
+
+Apex
+LWC
+SOQL
+
+Only include them if mentioned.
 
 
+2. Do not include generic words as technical skills.
 
-------------------------------------------------
+Do NOT include:
+
+Communication
+Leadership
+Problem solving
+Teamwork
+Agile
 
 
-RESPONSIBILITIES:
+unless they appear under requirements.
 
-Convert paragraphs into clean bullet points.
+
+3. Remove duplicates.
+
+
+4. Keep exact technology names.
+
+
+================================================
+RESPONSIBILITIES
+================================================
+
+Convert job responsibilities into short professional bullet points.
 
 Example:
 
 Bad:
 
-"Responsible for maintaining applications"
+Responsible for Salesforce development activities.
 
 
 Good:
 
 [
-"Develop and maintain Salesforce applications",
-"Create Apex triggers and integrations"
+"Develop Salesforce applications using Apex and Lightning components",
+"Build integrations using REST APIs"
 ]
 
 
+================================================
+REQUIREMENTS
+================================================
 
-------------------------------------------------
+Extract required qualifications.
+
+Examples:
+
+[
+"3+ years Salesforce development experience",
+"Apex programming experience",
+"Salesforce Platform Developer certification"
+]
 
 
-DESCRIPTION:
+================================================
+DESCRIPTION GENERATION
+================================================
 
-Write a professional recruiter-friendly summary.
+Create a recruiter-friendly job summary.
 
-Requirements:
+Rules:
 
-- 2-3 paragraphs
-- No copied sentences
+- 2 short paragraphs
+- Do not copy original sentences
 - Mention role purpose
-- Mention major technologies
-- Mention experience expectations
+- Mention Salesforce technologies
+- Mention expected experience
+- Keep professional tone
 
 
+================================================
+FINAL VALIDATION BEFORE RESPONSE
+================================================
 
-------------------------------------------------
+Before returning JSON verify:
 
-
-If information is missing:
-
-Return:
-
-[]
-for arrays
-
-null
-for unknown values
+✓ Valid JSON syntax
+✓ No markdown
+✓ No comments
+✓ No invented skills
+✓ All arrays contain strings only
+✓ skills field is always a flat array
 
 
 `;
@@ -878,7 +984,7 @@ export async function runJobImport(): Promise<ImportStats> {
 
         roleCategory: enriched.roleCategory,
 
-        skills: enriched.skills || [],
+        skills: normalizeSkills(enriched.skills),
 
         employmentType: enriched.employmentType,
 
