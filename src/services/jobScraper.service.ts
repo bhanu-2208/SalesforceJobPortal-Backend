@@ -760,7 +760,9 @@ export async function runJobImport(): Promise<ImportStats> {
 
   isImportRunning = true;
 
-  console.log("\n========================================");
+  try{
+
+    console.log("\n========================================");
   console.log("🚀 Starting Salesforce Job Import");
   console.log("========================================\n");
 
@@ -938,6 +940,16 @@ export async function runJobImport(): Promise<ImportStats> {
     rejected,
     errors,
   };
+  }
+  finally {
+
+        COMPANY_CACHE.clear();
+
+        isImportRunning = false;
+
+        console.log("Importer unlocked");
+
+    }
 }
 
 // ─────────────────────────────────────────────────────────────
