@@ -9,6 +9,7 @@ import { ExperienceLevel } from "../models/Job";
 import { evaluateSalesforceJob } from "./salesforceFilter";
 
 import { fetchCompanyJobs } from "./atsJob.service";
+import { cleanHTML } from "../utils/htmlcleaner";
 
 
 let isImportRunning = false;
@@ -123,10 +124,11 @@ async function fetchFromRemotive(): Promise<RawExternalJob[]> {
       companyName: job.company_name,
 
       description:
-        job.description
+        // job.description
           // ?.replace(/<[^>]+>/g, " ")
-          .replace(/\s+/g, " ")
-          .trim(),
+          // .replace(/\s+/g, " ")
+          // .trim(),
+          cleanHTML(job.description),
       location: job.candidate_required_location,
 
       applyUrl: job.url,
@@ -165,10 +167,11 @@ async function fetchFromArbeitnow(): Promise<RawExternalJob[]> {
         companyName: job.company_name,
 
         description:
-          job.description
-            // ?.replace(/<[^>]+>/g, " ")
-            .replace(/\s+/g, " ")
-            .trim(),
+          // job.description
+          //   // ?.replace(/<[^>]+>/g, " ")
+          //   .replace(/\s+/g, " ")
+          //   .trim(),
+          cleanHTML(job.description),
 
         location: job.location,
 
