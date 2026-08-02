@@ -726,13 +726,13 @@ async function loadJobs(): Promise<RawExternalJob[]> {
 
   ]);
 
-  // console.log("\n──────── SOURCES ────────");
+  console.log("\n──────── SOURCES ────────");
 
-  // console.log("Remotive         :", remotive.length);
-  // console.log("Arbeitnow        :", arbeitnow.length);
-  // console.log("ATS Companies    :", atsJobs.length);
+  console.log("Remotive         :", remotive.length);
+  console.log("Arbeitnow        :", arbeitnow.length);
+  console.log("ATS Companies    :", atsJobs.length);
 
-  // console.log("─────────────────────────\n");
+  console.log("─────────────────────────\n");
 
   return [
     ...remotive,
@@ -770,7 +770,7 @@ export async function runJobImport(): Promise<ImportStats> {
 
   const allJobs = await loadJobs();
 
-  // console.log(`Fetched ${allJobs.length} jobs.\n`);
+  console.log(`Fetched ${allJobs.length} jobs.\n`);
 
   let imported = 0;
   let skipped = 0;
@@ -789,9 +789,9 @@ export async function runJobImport(): Promise<ImportStats> {
     if (!result.accepted) {
       rejected++;
 
-      // console.log(
-      //   `⛔ ${job.title}\n   ${result.reason}`
-      // );
+      console.log(
+        `⛔ ${job.title}\n   ${result.reason}`
+      );
 
       continue;
     }
@@ -799,9 +799,9 @@ export async function runJobImport(): Promise<ImportStats> {
     acceptedJobs.push(job);
   }
 
-  // console.log(
-  //   `\n✅ ${acceptedJobs.length} jobs passed Salesforce filtering.\n`
-  // );
+  console.log(
+    `\n✅ ${acceptedJobs.length} jobs passed Salesforce filtering.\n`
+  );
 
   // ------------------------------------
   // Sort newest first
@@ -821,9 +821,9 @@ export async function runJobImport(): Promise<ImportStats> {
 
   const jobsToImport = acceptedJobs.slice(0, MAX_IMPORTS);
 
-  // console.log(
-  //   `Importing ${jobsToImport.length} newest jobs...\n`
-  // );
+  console.log(
+    `Importing ${jobsToImport.length} newest jobs...\n`
+  );
 
   // ------------------------------------
   // Import loop starts here
@@ -896,9 +896,9 @@ export async function runJobImport(): Promise<ImportStats> {
 
       imported++;
 
-      // console.log(
-      //   `✅ Imported: ${raw.title} (${raw.companyName})`
-      // );
+      console.log(
+        `✅ Imported: ${raw.title} (${raw.companyName})`
+      );
     } catch (error: any) {
 
       // Duplicate slug or source ID
@@ -906,31 +906,31 @@ export async function runJobImport(): Promise<ImportStats> {
 
         skipped++;
 
-        // console.log(
-        //   `⚠ Duplicate skipped: ${raw.title}`
-        // );
+        console.log(
+          `⚠ Duplicate skipped: ${raw.title}`
+        );
 
         continue;
       }
 
       errors++;
 
-      // console.error(
-      //   `❌ Failed to import "${raw.title}"`,
-      //   error
-      // );
+      console.error(
+        `❌ Failed to import "${raw.title}"`,
+        error
+      );
     }
   }
 
-  // console.log("\n========================================");
-  // console.log("📊 Import Summary");
-  // console.log("========================================");
+  console.log("\n========================================");
+  console.log("📊 Import Summary");
+  console.log("========================================");
 
-  // console.log(`Fetched   : ${allJobs.length}`);
-  // console.log(`Imported  : ${imported}`);
-  // console.log(`Skipped   : ${skipped}`);
-  // console.log(`Rejected  : ${rejected}`);
-  // console.log(`Errors    : ${errors}`);
+  console.log(`Fetched   : ${allJobs.length}`);
+  console.log(`Imported  : ${imported}`);
+  console.log(`Skipped   : ${skipped}`);
+  console.log(`Rejected  : ${rejected}`);
+  console.log(`Errors    : ${errors}`);
 
   //   console.log("========================================\n");
   COMPANY_CACHE.clear();
@@ -985,13 +985,13 @@ export async function previewImport() {
 export async function testSingleJob(job: RawExternalJob) {
   const result = evaluateSalesforceJob(job);
 
-  // console.log("\n==============================");
-  // console.log("Job:", job.title);
-  // console.log("Company:", job.companyName);
-  // console.log("Accepted:", result.accepted);
-  // console.log("Reason:", result.reason);
-  // console.log("Matched Tech:", result.matchedTechnology);
-  // console.log("==============================\n");
+  console.log("\n==============================");
+  console.log("Job:", job.title);
+  console.log("Company:", job.companyName);
+  console.log("Accepted:", result.accepted);
+  console.log("Reason:", result.reason);
+  console.log("Matched Tech:", result.matchedTechnology);
+  console.log("==============================\n");
 
   return result;
 }
