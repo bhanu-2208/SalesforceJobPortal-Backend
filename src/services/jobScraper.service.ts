@@ -944,13 +944,13 @@ async function loadJobs(): Promise<RawExternalJob[]> {
 
   ]);
 
-  console.log("\n──────── SOURCES ────────");
+  // console.log("\n──────── SOURCES ────────");
 
-  console.log("Remotive         :", remotive.length);
-  console.log("Arbeitnow        :", arbeitnow.length);
-  console.log("ATS Companies    :", atsJobs.length);
+  // console.log("Remotive         :", remotive.length);
+  // console.log("Arbeitnow        :", arbeitnow.length);
+  // console.log("ATS Companies    :", atsJobs.length);
 
-  console.log("─────────────────────────\n");
+  // console.log("─────────────────────────\n");
 
   return [
     ...remotive,
@@ -1007,9 +1007,9 @@ export async function runJobImport(): Promise<ImportStats> {
     if (!result.accepted) {
       rejected++;
 
-      console.log(
-        `⛔ ${job.title}\n   ${result.reason}`
-      );
+      // console.log(
+      //   `⛔ ${job.title}\n   ${result.reason}`
+      // );
 
       continue;
     }
