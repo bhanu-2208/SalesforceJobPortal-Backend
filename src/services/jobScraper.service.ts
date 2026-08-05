@@ -802,17 +802,42 @@ ${fullDescription}
 
   try {
     const result = await geminiModel.generateContent(prompt);
-    const cleaned = result.response.text().replace(/^\`\`\`json\s*/i, "").replace(/\`\`\`\s*$/i, "").trim();
+    const raw = result.response.text();
+
+    console.log("\n================ GEMINI RAW RESPONSE ================\n");
+    console.log(raw);
+    console.log("\n=====================================================\n");
+
+    const cleaned = raw
+      .replace(/^\`\`\`json\s*/i, "")
+      .replace(/\`\`\`\s*$/i, "")
+      .trim();
+
+    console.log("\n================ CLEANED JSON ========================\n");
+    console.log(cleaned);
+    console.log("\n=====================================================\n");
+
     return JSON.parse(cleaned);
-  } catch {
-    // Safe fallback — never block the import if AI fails
+  } catch (error: any) {
+    console.error("Gemini Error:");
+    console.error(error);
+
     return {
-      overview: "", cleanDescription: fullDescription.slice(0, 10000),
-      responsibilities: [], requirements: [], preferredQualifications: [],
-      benefits: [], skills: ["Salesforce"], salesforceProducts: [], certifications: [],
-      workMode: null, experienceLevel: null, roleCategory: "Salesforce", employmentType: "Full-time",
+        overview: "",
+        cleanDescription: fullDescription.slice(0,10000),
+        responsibilities: [],
+        requirements: [],
+        preferredQualifications: [],
+        benefits: [],
+        skills: ["Salesforce"],
+        salesforceProducts: [],
+        certifications: [],
+        workMode: null,
+        experienceLevel: null,
+        roleCategory: "Salesforce",
+        employmentType: "Full-time",
     };
-  }
+}
 }
 
 // ─────────────────────────────────────────────────────────────
