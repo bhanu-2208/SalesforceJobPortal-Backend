@@ -65,7 +65,7 @@ interface ImportStats {
   errors: number;
 }
 
-const MAX_IMPORTS = 200;
+const MAX_IMPORTS = 50;
 
 const COMPANY_CACHE = new Map<string, any>();
 
@@ -709,7 +709,42 @@ async function fetchFromArbeitnow(): Promise<RawExternalJob[]> {
 //     };
 // }
 
+function formatDescription(description: string): string {
+  if (!description) return "";
 
+  // Remove HTML
+  let text = cleanHTML(description);
+
+  // Decode common HTML entities
+  text = text
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"');
+
+  // Remove excessive spaces
+  text = text.replace(/[ \t]+/g, " ");
+
+  // Remove more than 2 consecutive newlines
+  text = text.replace(/\n{3,}/g, "\n\n");
+
+  // Split into sentences
+  const sentences = text
+    .split(/(?<=[.!?])\s+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  // Group 4 sentences per paragraph
+  const paragraphs: string[] = [];
+
+  for (let i = 0; i < sentences.length; i += 4) {
+    paragraphs.push(sentences.slice(i, i + 4).join(" "));
+  }
+
+  return paragraphs.join("\n\n").trim();
+}
 // }
 async function enrichWithAI(raw: RawExternalJob, fullDescription: string): Promise<AIEnrichment> {
   const prompt = `
@@ -786,7 +821,11 @@ Rules for cleanDescription:
   "skills": string[] (technical skills/tools mentioned),
   "salesforceProducts": string[] (Salesforce clouds/products mentioned — Sales Cloud, Apex, LWC, etc. — empty array if none),
   "certifications": string[] (certifications mentioned, empty array if none),
-  "workMode": "Remote" | "Hybrid" | "Onsite" | null,
+ workMode:
+- Return "Remote" if explicitly mentioned.
+- Return "Hybrid" if explicitly mentioned.
+- If neither Remote nor Hybrid is mentioned, return "Onsite".
+- Never return null.
   "experienceLevel": "Intern" | "Fresher" | "Associate" | "Mid" | "Senior" | "Lead" | null,
   "roleCategory": string | null,
   "employmentType": "Full-time" | "Part-time" | "Contract" | "Internship" | null
@@ -824,7 +863,7 @@ ${fullDescription}
 
     return {
         overview: "",
-        cleanDescription: fullDescription.slice(0,10000),
+        cleanDescription: formatDescription(fullDescription),
         responsibilities: [],
         requirements: [],
         preferredQualifications: [],
@@ -832,7 +871,7 @@ ${fullDescription}
         skills: ["Salesforce"],
         salesforceProducts: [],
         certifications: [],
-        workMode: null,
+        workMode: "Onsite",
         experienceLevel: null,
         roleCategory: "Salesforce",
         employmentType: "Full-time",
@@ -1099,7 +1138,8 @@ export async function runJobImport(): Promise<ImportStats> {
       // the rule engine has approved the job.
 
       const fullDescription = await getFullDescription(raw);
-      const enriched = await enrichWithAI(raw, fullDescription);
+      const promptDescription = fullDescription.slice(0, 8000);
+      const enriched = await enrichWithAI(raw, promptDescription);
 
       await Job.create({
         title:                   raw.title,
@@ -1114,7 +1154,7 @@ export async function runJobImport(): Promise<ImportStats> {
         salesforceProducts:      enriched.salesforceProducts || [],
         certifications:          enriched.certifications || [],
         location:                raw.location,
-        workMode:                enriched.workMode,
+        workMode:                enriched.workMode ?? "Onsite",
         experienceLevel: convertExperienceLevel(
             enriched.experienceLevel
         ),
