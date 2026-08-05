@@ -1,5 +1,6 @@
 
 import Job from "../models/Job";
+import { getFullDescription } from "./jobExtraction.service";
 import Company from "../models/Company";
 import User from "../models/User";
 import geminiModel from "./gemini.service";
@@ -31,12 +32,7 @@ interface AIEnrichment {
   workMode: "Remote" | "Hybrid" | "Onsite" | null;
 
   experienceLevel:
-    | "Intern"
-    | "Fresher"
-    | "Associate"
-    | "Mid"
-    | "Senior"
-    | "Lead"
+    | "0 Years"| "1-2 Years"| "2-6 Years"| "6-8 Years"| "8-12 Years"| "12+ Years"
     | null;
 
   roleCategory: string | null;
@@ -50,7 +46,16 @@ interface AIEnrichment {
     | "Internship"
     | null;
 
-  description: string;
+  overview:                string;
+  cleanDescription:        string;
+  responsibilities:        string[];
+  requirements:            string[];
+  preferredQualifications: string[];
+  benefits:                string[];
+  salesforceProducts:      string[];
+  certifications:          string[];
+
+
 }
 
 interface ImportStats {
@@ -238,474 +243,526 @@ async function fetchFromArbeitnow(): Promise<RawExternalJob[]> {
 // Saves Gemini requests and money.
 // ─────────────────────────────────────────────────────────────
 
-async function enrichWithAI(
-    raw: RawExternalJob
-): Promise<AIEnrichment>{
+// async function enrichWithAI(
+//     raw: RawExternalJob
+// ): Promise<AIEnrichment>{
 
 
-const prompt = `
+// const prompt = `
 
-You are an expert Salesforce technical recruiter and job data extraction engine.
+// You are an expert Salesforce technical recruiter and job data extraction engine.
 
-You work for a Salesforce-focused job marketplace.
+// You work for a Salesforce-focused job marketplace.
 
-Your task is to analyze raw ATS job data and convert it into a clean structured JSON record.
+// Your task is to analyze raw ATS job data and convert it into a clean structured JSON record.
 
-Your output will be directly stored in MongoDB.
+// Your output will be directly stored in MongoDB.
 
-Accuracy is more important than completeness.
+// Accuracy is more important than completeness.
 
-NEVER invent information.
+// NEVER invent information.
 
-================================================
-JOB INPUT
-================================================
+// ================================================
+// JOB INPUT
+// ================================================
 
-Title:
-${raw.title}
+// Title:
+// ${raw.title}
 
-Company:
-${raw.companyName}
+// Company:
+// ${raw.companyName}
 
-Location:
-${raw.location ?? "Unknown"}
+// Location:
+// ${raw.location ?? "Unknown"}
 
-Job Description:
+// Job Description:
 
-${raw.description.slice(0, 8000)}
+// ${raw.description.slice(0, 8000)}
 
 
-================================================
-STRICT OUTPUT RULES
-================================================
+// ================================================
+// STRICT OUTPUT RULES
+// ================================================
 
-Return ONLY valid JSON.
+// Return ONLY valid JSON.
 
-Do not use markdown.
+// Do not use markdown.
 
-Do not add explanations.
+// Do not add explanations.
 
-Do not wrap JSON inside code blocks.
+// Do not wrap JSON inside code blocks.
 
-All missing information must be:
+// All missing information must be:
 
-Arrays:
-[]
+// Arrays:
+// []
 
-Unknown values:
-null
+// Unknown values:
+// null
 
 
-================================================
-OUTPUT JSON FORMAT
-================================================
+// ================================================
+// OUTPUT JSON FORMAT
+// ================================================
 
-{
-"title": "",
-"normalizedTitle": "",
+// {
+// "title": "",
+// "normalizedTitle": "",
 
-"roleCategory": "",
+// "roleCategory": "",
 
 
-"seniority": 
-"Intern" |
-"Fresher" |
-"Associate" |
-"Mid" |
-"Senior" |
-"Lead" |
-null,
+// "seniority": 
+// "Intern" |
+// "Fresher" |
+// "Associate" |
+// "Mid" |
+// "Senior" |
+// "Lead" |
+// null,
 
 
-"experienceLevel":
-{
-"minYears": null,
-"maxYears": null
-},
+// "experienceLevel":
+// {
+// "minYears": null,
+// "maxYears": null
+// },
 
 
-"workMode":
-"Remote" |
-"Hybrid" |
-"Onsite" |
-null,
+// "workMode":
+// "Remote" |
+// "Hybrid" |
+// "Onsite" |
+// null,
 
 
-"employmentType":
-"Full-time" |
-"Part-time" |
-"Contract" |
-"Internship" |
-null,
+// "employmentType":
+// "Full-time" |
+// "Part-time" |
+// "Contract" |
+// "Internship" |
+// null,
 
 
-"skills": [],
+// "skills": [],
 
 
-"salesforceExpertise":
-{
-"products": [],
-"development": [],
-"administration": [],
-"automation": [],
-"data": [],
-"integrations": [],
-"testing": [],
-"certifications": []
-},
+// "salesforceExpertise":
+// {
+// "products": [],
+// "development": [],
+// "administration": [],
+// "automation": [],
+// "data": [],
+// "integrations": [],
+// "testing": [],
+// "certifications": []
+// },
 
 
-"programmingSkills": [],
+// "programmingSkills": [],
 
 
-"cloudSkills": [],
+// "cloudSkills": [],
 
 
-"databaseSkills": [],
+// "databaseSkills": [],
 
 
-"devopsSkills": [],
+// "devopsSkills": [],
 
 
-"tools": [],
+// "tools": [],
 
 
-"responsibilities": [],
+// "responsibilities": [],
 
 
-"requirements": [],
+// "requirements": [],
 
 
-"niceToHave": [],
+// "niceToHave": [],
 
 
-"description": ""
+// "description": ""
 
-}
+// }
 
 
-================================================
-EXTRACTION RULES
-================================================
+// ================================================
+// EXTRACTION RULES
+// ================================================
 
 
-TITLE NORMALIZATION:
+// TITLE NORMALIZATION:
 
-Convert vague titles into Salesforce-specific professional titles.
+// Convert vague titles into Salesforce-specific professional titles.
 
-Examples:
+// Examples:
 
 
-Input:
-CRM Developer
+// Input:
+// CRM Developer
 
-Output:
-Salesforce Developer
+// Output:
+// Salesforce Developer
 
 
-Input:
-Business Systems Engineer II
+// Input:
+// Business Systems Engineer II
 
-Output:
-Salesforce Business Systems Engineer
+// Output:
+// Salesforce Business Systems Engineer
 
 
-Input:
-Application Engineer
+// Input:
+// Application Engineer
 
-Output:
-Salesforce Application Engineer
+// Output:
+// Salesforce Application Engineer
 
 
-Do not change the seniority level.
+// Do not change the seniority level.
 
-================================================
+// ================================================
 
 
-SALESFORCE SKILL EXTRACTION
-================================================
+// SALESFORCE SKILL EXTRACTION
+// ================================================
 
-Extract ONLY Salesforce-related technologies explicitly mentioned or clearly required.
+// Extract ONLY Salesforce-related technologies explicitly mentioned or clearly required.
 
 
-Development:
+// Development:
 
-Apex
-Lightning Web Components
-Aura Components
-Visualforce
-SOQL
-SOSL
-Triggers
-Batch Apex
-Queueable Apex
-REST API
-SOAP API
-Salesforce DX
-Salesforce CLI
+// Apex
+// Lightning Web Components
+// Aura Components
+// Visualforce
+// SOQL
+// SOSL
+// Triggers
+// Batch Apex
+// Queueable Apex
+// REST API
+// SOAP API
+// Salesforce DX
+// Salesforce CLI
 
 
-Automation:
+// Automation:
 
-Salesforce Flow
-Flow Builder
-Process Builder
-Workflow Rules
-Approval Processes
+// Salesforce Flow
+// Flow Builder
+// Process Builder
+// Workflow Rules
+// Approval Processes
 
 
-Administration:
+// Administration:
 
-Salesforce Administration
-Profiles
-Permission Sets
-Roles
-Sharing Rules
-Reports
-Dashboards
-Security Model
+// Salesforce Administration
+// Profiles
+// Permission Sets
+// Roles
+// Sharing Rules
+// Reports
+// Dashboards
+// Security Model
 
 
-Salesforce Clouds:
+// Salesforce Clouds:
 
-Sales Cloud
-Service Cloud
-Experience Cloud
-Marketing Cloud
-Commerce Cloud
-Data Cloud
-CPQ
-Field Service
+// Sales Cloud
+// Service Cloud
+// Experience Cloud
+// Marketing Cloud
+// Commerce Cloud
+// Data Cloud
+// CPQ
+// Field Service
 
 
-Data:
+// Data:
 
-Data Loader
-Data Import Wizard
-Data Migration
-ETL
+// Data Loader
+// Data Import Wizard
+// Data Migration
+// ETL
 
 
-Testing:
+// Testing:
 
-Apex Testing
-Test Classes
-Code Coverage
+// Apex Testing
+// Test Classes
+// Code Coverage
 
 
-================================================
-PROGRAMMING SKILLS
-================================================
+// ================================================
+// PROGRAMMING SKILLS
+// ================================================
 
-Extract only if mentioned:
+// Extract only if mentioned:
 
-Java
-JavaScript
-TypeScript
-Python
-C#
-SQL
-HTML
-CSS
+// Java
+// JavaScript
+// TypeScript
+// Python
+// C#
+// SQL
+// HTML
+// CSS
 
 
-================================================
-CLOUD / DEVOPS
-================================================
+// ================================================
+// CLOUD / DEVOPS
+// ================================================
 
-Extract only if mentioned:
+// Extract only if mentioned:
 
-AWS
-Azure
-GCP
-Docker
-Kubernetes
-CI/CD
-GitHub Actions
-Jenkins
-Terraform
+// AWS
+// Azure
+// GCP
+// Docker
+// Kubernetes
+// CI/CD
+// GitHub Actions
+// Jenkins
+// Terraform
 
 
-================================================
-DATABASE
-================================================
+// ================================================
+// DATABASE
+// ================================================
 
-Extract only if mentioned:
+// Extract only if mentioned:
 
-MongoDB
-PostgreSQL
-MySQL
-Oracle
-Redis
-SQL Server
+// MongoDB
+// PostgreSQL
+// MySQL
+// Oracle
+// Redis
+// SQL Server
 
 
-================================================
-TOOLS
-================================================
+// ================================================
+// TOOLS
+// ================================================
 
-Extract:
+// Extract:
 
-Jira
-Git
-GitHub
-Bitbucket
-VS Code
-Postman
-MuleSoft
-Copado
-Gearset
+// Jira
+// Git
+// GitHub
+// Bitbucket
+// VS Code
+// Postman
+// MuleSoft
+// Copado
+// Gearset
 
 
-================================================
-SKILL RULES
-================================================
+// ================================================
+// SKILL RULES
+// ================================================
 
-VERY IMPORTANT:
+// VERY IMPORTANT:
 
-1. Never infer skills from job title alone.
+// 1. Never infer skills from job title alone.
 
-Example:
+// Example:
 
-"Salesforce Developer"
+// "Salesforce Developer"
 
-Does NOT automatically mean:
+// Does NOT automatically mean:
 
-Apex
-LWC
-SOQL
+// Apex
+// LWC
+// SOQL
 
-Only include them if mentioned.
+// Only include them if mentioned.
 
 
-2. Do not include generic words as technical skills.
+// 2. Do not include generic words as technical skills.
 
-Do NOT include:
+// Do NOT include:
 
-Communication
-Leadership
-Problem solving
-Teamwork
-Agile
+// Communication
+// Leadership
+// Problem solving
+// Teamwork
+// Agile
 
 
-unless they appear under requirements.
+// unless they appear under requirements.
 
 
-3. Remove duplicates.
+// 3. Remove duplicates.
 
 
-4. Keep exact technology names.
+// 4. Keep exact technology names.
 
 
-================================================
-RESPONSIBILITIES
-================================================
+// ================================================
+// RESPONSIBILITIES
+// ================================================
 
-Convert job responsibilities into short professional bullet points.
+// Convert job responsibilities into short professional bullet points.
 
-Example:
+// Example:
 
-Bad:
+// Bad:
 
-Responsible for Salesforce development activities.
+// Responsible for Salesforce development activities.
 
 
-Good:
+// Good:
 
-[
-"Develop Salesforce applications using Apex and Lightning components",
-"Build integrations using REST APIs"
-]
+// [
+// "Develop Salesforce applications using Apex and Lightning components",
+// "Build integrations using REST APIs"
+// ]
 
 
-================================================
-REQUIREMENTS
-================================================
+// ================================================
+// REQUIREMENTS
+// ================================================
 
-Extract required qualifications.
+// Extract required qualifications.
 
-Examples:
+// Examples:
 
-[
-"3+ years Salesforce development experience",
-"Apex programming experience",
-"Salesforce Platform Developer certification"
-]
+// [
+// "3+ years Salesforce development experience",
+// "Apex programming experience",
+// "Salesforce Platform Developer certification"
+// ]
 
 
-================================================
-DESCRIPTION GENERATION
-================================================
+// ================================================
+// DESCRIPTION GENERATION
+// ================================================
 
-Create a recruiter-friendly job summary.
+// Create a recruiter-friendly job summary.
+
+// Rules:
+
+// - 2 short paragraphs
+// - Do not copy original sentences
+// - Mention role purpose
+// - Mention Salesforce technologies
+// - Mention expected experience
+// - Keep professional tone
+
+
+// ================================================
+// FINAL VALIDATION BEFORE RESPONSE
+// ================================================
+
+// Before returning JSON verify:
+
+// ✓ Valid JSON syntax
+// ✓ No markdown
+// ✓ No comments
+// ✓ No invented skills
+// ✓ All arrays contain strings only
+// ✓ skills field is always a flat array
+
+
+// `;
+
+
+
+// try{
+
+
+// const result =
+// await geminiModel.generateContent(prompt);
+
+
+
+// const cleaned =
+// result.response.text()
+// .replace(/^```json/i,"")
+// .replace(/```$/i,"")
+// .trim();
+
+
+
+// return JSON.parse(cleaned);
+
+
+
+// }
+// catch (error: any) {
+//     console.error(
+//         `AI parsing failed for ${raw.title}: ${error?.message || error}`
+//     );
+
+//     return {
+//         workMode: null,
+//         experienceLevel: null,
+//         roleCategory: "Salesforce",
+//         skills: ["Salesforce"],
+//         employmentType: "Full-time",
+//         description: raw.description,
+//     };
+// }
+
+
+// }
+async function enrichWithAI(raw: RawExternalJob, fullDescription: string): Promise<AIEnrichment> {
+  const prompt = `
+Rewrite the job description professionally.
 
 Rules:
+- Do NOT summarize. Do NOT shorten.
+- Preserve every requirement, responsibility, qualification, technology, and certification mentioned.
+- Remove duplicate sentences and HTML.
+- Improve grammar and formatting.
+- Keep all information — completeness matters more than brevity.
+- Return clean, professional English.
 
-- 2 short paragraphs
-- Do not copy original sentences
-- Mention role purpose
-- Mention Salesforce technologies
-- Mention expected experience
-- Keep professional tone
-
-
-================================================
-FINAL VALIDATION BEFORE RESPONSE
-================================================
-
-Before returning JSON verify:
-
-✓ Valid JSON syntax
-✓ No markdown
-✓ No comments
-✓ No invented skills
-✓ All arrays contain strings only
-✓ skills field is always a flat array
-
-
-`;
-
-
-
-try{
-
-
-const result =
-await geminiModel.generateContent(prompt);
-
-
-
-const cleaned =
-result.response.text()
-.replace(/^```json/i,"")
-.replace(/```$/i,"")
-.trim();
-
-
-
-return JSON.parse(cleaned);
-
-
-
+Then extract structured data and return ONLY this JSON object, nothing else:
+{
+  "overview": string (2-3 sentence company/role intro),
+  "cleanDescription": string (the full rewritten description, well-formatted),
+  "responsibilities": string[] (every responsibility mentioned, one per item),
+  "requirements": string[] (every required skill/experience, one per item),
+  "preferredQualifications": string[] (nice-to-have items, one per item),
+  "benefits": string[] (perks/benefits mentioned, empty array if none),
+  "skills": string[] (technical skills/tools mentioned),
+  "salesforceProducts": string[] (Salesforce clouds/products mentioned — Sales Cloud, Apex, LWC, etc. — empty array if none),
+  "certifications": string[] (certifications mentioned, empty array if none),
+  "workMode": "Remote" | "Hybrid" | "Onsite" | null,
+  "experienceLevel": "Intern" | "Fresher" | "Associate" | "Mid" | "Senior" | "Lead" | null,
+  "roleCategory": string | null,
+  "employmentType": "Full-time" | "Part-time" | "Contract" | "Internship" | null
 }
-catch (error: any) {
-    console.error(
-        `AI parsing failed for ${raw.title}: ${error?.message || error}`
-    );
 
+Job Title: ${raw.title}
+Company: ${raw.companyName}
+Location: ${raw.location ?? "Not specified"}
+
+Full Job Posting:
+${fullDescription}
+`.trim();
+
+  try {
+    const result = await geminiModel.generateContent(prompt);
+    const cleaned = result.response.text().replace(/^\`\`\`json\s*/i, "").replace(/\`\`\`\s*$/i, "").trim();
+    return JSON.parse(cleaned);
+  } catch {
+    // Safe fallback — never block the import if AI fails
     return {
-        workMode: null,
-        experienceLevel: null,
-        roleCategory: "Salesforce",
-        skills: ["Salesforce"],
-        employmentType: "Full-time",
-        description: raw.description,
+      overview: "", cleanDescription: fullDescription.slice(0, 10000),
+      responsibilities: [], requirements: [], preferredQualifications: [],
+      benefits: [], skills: ["Salesforce"], salesforceProducts: [], certifications: [],
+      workMode: null, experienceLevel: null, roleCategory: "Salesforce", employmentType: "Full-time",
     };
+  }
 }
 
-
-}
 // ─────────────────────────────────────────────────────────────
 // DATABASE HELPERS
 // ─────────────────────────────────────────────────────────────
@@ -964,44 +1021,69 @@ export async function runJobImport(): Promise<ImportStats> {
       // AI enrichment happens ONLY after
       // the rule engine has approved the job.
 
-      const enriched = await enrichWithAI(raw);
+      const fullDescription = await getFullDescription(raw);
+      const enriched = await enrichWithAI(raw, fullDescription);
 
-            await Job.create({
-        title: raw.title,
-
+      await Job.create({
+        title:                   raw.title,
         slug,
-
-        description:
-          enriched.description || raw.description,
-
-        location: raw.location,
-
-        workMode: enriched.workMode,
-
-        experienceLevel: convertExperienceLevel(
-          enriched.experienceLevel
-        ),
-
-        roleCategory: enriched.roleCategory,
-
-        skills: normalizeSkills(enriched.skills),
-
-        employmentType: enriched.employmentType,
-
-        applyUrl: raw.applyUrl,
-
-        source: raw.source,
-
-        sourceId: raw.sourceId,
-
-        postedAt: raw.postedAt
-          ? new Date(raw.postedAt)
-          : new Date(),
-
-        company: company._id,
-
-        postedBy: systemUser._id,
+        description:             enriched.cleanDescription || fullDescription,
+        overview:                enriched.overview,
+        responsibilities:        enriched.responsibilities || [],
+        requirements:            enriched.requirements || [],
+        preferredQualifications: enriched.preferredQualifications || [],
+        benefits:                enriched.benefits || [],
+        skills:                  enriched.skills || [],
+        salesforceProducts:      enriched.salesforceProducts || [],
+        certifications:          enriched.certifications || [],
+        location:                raw.location,
+        workMode:                enriched.workMode,
+        experienceLevel:         enriched.experienceLevel,
+        roleCategory:            enriched.roleCategory,
+        employmentType:          enriched.employmentType,
+        applyUrl:                raw.applyUrl,
+        source:                  raw.source,
+        sourceId:                raw.sourceId,
+        postedAt:                raw.postedAt ? new Date(raw.postedAt) : new Date(),
+        company:                 company._id,
       });
+
+      //       await Job.create({
+      //   title: raw.title,
+
+      //   slug,
+
+      //   description:
+      //     enriched.description || raw.description,
+
+      //   location: raw.location,
+
+      //   workMode: enriched.workMode,
+
+      //   experienceLevel: convertExperienceLevel(
+      //     enriched.experienceLevel
+      //   ),
+
+      //   roleCategory: enriched.roleCategory,
+
+      //   skills: normalizeSkills(enriched.skills),
+
+      //   employmentType: enriched.employmentType,
+
+      //   applyUrl: raw.applyUrl,
+
+      //   source: raw.source,
+
+      //   sourceId: raw.sourceId,
+
+      //   postedAt: raw.postedAt
+      //     ? new Date(raw.postedAt)
+      //     : new Date(),
+
+      //   company: company._id,
+
+      //   postedBy: systemUser._id,
+      // });
 
       imported++;
 
