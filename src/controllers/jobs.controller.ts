@@ -34,7 +34,7 @@ export async function getJobBySlug(req: Request, res: Response): Promise<void> {
 export async function createJob(req: Request, res: Response): Promise<void> {
   try {
     const { title, description, applyUrl, companyName } = req.body;
-    if (!title || !description || !applyUrl || !companyName) {
+    if (!title || !description || !applyUrl) {
       res.status(400).json({ success: false, message: "title, description, applyUrl, and companyName are required." });
       return;
     }

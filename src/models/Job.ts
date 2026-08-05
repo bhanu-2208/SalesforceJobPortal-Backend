@@ -58,6 +58,7 @@ const jobSchema = new Schema<IJob>(
     workMode: {
       type: String,
       enum: ["Remote", "Hybrid", "Onsite"],
+        default: "Onsite",
     },
     experienceLevel: {
       type: String,
@@ -85,7 +86,6 @@ const jobSchema = new Schema<IJob>(
     postedBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
       index: true,
     },
     sourceId: {

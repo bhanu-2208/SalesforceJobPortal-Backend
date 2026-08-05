@@ -20,7 +20,11 @@ export const GeneratedJobSchema = z.object({
   responsibilities: z.array(z.string()).default([]),
   requirements:     z.array(z.string()).default([]),
   benefits:         z.array(z.string()).default([]),
-  description:      z.string().min(1),
+  overview: z.string(),
+
+  description: z.string(),
+  preferredQualifications: z.array(z.string()),
+  salesforceProducts: z.array(z.string()),
   applyUrl:         z.string().nullable().optional(),
 });
 

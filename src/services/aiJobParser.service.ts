@@ -34,7 +34,23 @@ Extract the following fields from the job description below and return ONLY a JS
   "responsibilities": string[] — key responsibilities as bullet points,
   "requirements":     string[] — key requirements as bullet points,
   "benefits":         string[] — perks or benefits mentioned,
-  "description":      string — a clean 2-3 paragraph summary of the role,
+  "overview": string,
+
+"description": string,
+
+"responsibilities": string[],
+
+"requirements": string[],
+
+"preferredQualifications": string[],
+
+"benefits": string[],
+
+"skills": string[],
+
+"salesforceProducts": string[],
+
+"certifications": string[],
   "applyUrl":         string | null — application URL if mentioned
 }
 
@@ -42,7 +58,32 @@ Rules:
 - experienceLevel: map years to level (0-1yr=Fresher, 1-3yr=Associate, 3-5yr=Mid, 5-8yr=Senior, 8+yr=Lead)
 - workMode: infer from keywords like "work from home"=Remote, "on-site"=Onsite
 - skills: include Salesforce-specific skills like Apex, LWC, SOQL, Flow, CPQ etc.
-- description: write a clean professional summary, not copy-paste from the JD
+- description: overview
+
+- Write 2-3 sentences introducing the company and role.
+
+description
+
+- Rewrite the complete job posting professionally.
+- Preserve all information.
+- Remove duplicated sentences.
+- Remove HTML.
+- Improve grammar.
+- Do NOT shorten important information.
+
+IMPORTANT
+
+The description MUST NOT contain:
+
+- Job Description
+- Responsibilities
+- Requirements
+- Preferred Qualifications
+- Benefits
+- Certifications
+- Skills
+
+Those belong ONLY inside their own arrays.
 - Return ONLY the JSON object, nothing else — no markdown fences, no commentary.
 
 Job Description:

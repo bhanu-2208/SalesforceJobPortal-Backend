@@ -104,6 +104,14 @@ export async function createJob(input: any, postedBy?: string) {
   for (const key of Object.keys(input)) { if (input[key] === "") delete input[key]; }
   if (!input.slug) input.slug = slugify(`${input.title}-${input.location ?? ""}-${Date.now()}`);
   if (!input.postedAt) input.postedAt = new Date();
+  input.overview ??= "";
+  input.responsibilities ??= [];
+  input.requirements ??= [];
+  input.preferredQualifications ??= [];
+  input.benefits ??= [];
+  input.skills ??= [];
+  input.salesforceProducts ??= [];
+  input.certifications ??= [];
   return new Job(input).save();
 }
  

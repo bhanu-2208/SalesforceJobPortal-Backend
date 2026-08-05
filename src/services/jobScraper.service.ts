@@ -713,7 +713,45 @@ async function fetchFromArbeitnow(): Promise<RawExternalJob[]> {
 // }
 async function enrichWithAI(raw: RawExternalJob, fullDescription: string): Promise<AIEnrichment> {
   const prompt = `
-Rewrite the job description professionally.
+Rewrite the job posting into structured recruiter content.
+
+VERY IMPORTANT:
+
+The JSON fields have different purposes.
+
+overview:
+- 2-3 sentence company/role introduction.
+
+cleanDescription:
+- A readable introduction to the role.
+- Do NOT include headings.
+- Do NOT include Responsibilities.
+- Do NOT include Requirements.
+- Do NOT include Preferred Qualifications.
+- Do NOT include Benefits.
+- Do NOT include Certifications.
+- Maximum 4 paragraphs.
+
+responsibilities:
+- Extract EVERY responsibility separately.
+
+requirements:
+- Extract EVERY required qualification separately.
+
+preferredQualifications:
+- Extract EVERY preferred qualification separately.
+
+benefits:
+- Extract every benefit separately.
+
+skills:
+- Technical skills only.
+
+salesforceProducts:
+- Salesforce products only.
+
+certifications:
+- Salesforce certifications only.
 
 Rules:
 - Do NOT summarize. Do NOT shorten.
@@ -726,7 +764,21 @@ Rules:
 Then extract structured data and return ONLY this JSON object, nothing else:
 {
   "overview": string (2-3 sentence company/role intro),
-  "cleanDescription": string (the full rewritten description, well-formatted),
+  "cleanDescription": string
+
+Rules for cleanDescription:
+
+- Include ONLY the introduction and overview of the role.
+- Maximum 2-4 short paragraphs.
+- Do NOT include headings.
+- Do NOT include:
+  - Responsibilities
+  - Requirements
+  - Preferred Qualifications
+  - Benefits
+  - Certifications
+  - Skills
+- Those must ONLY appear in their respective arrays.
   "responsibilities": string[] (every responsibility mentioned, one per item),
   "requirements": string[] (every required skill/experience, one per item),
   "preferredQualifications": string[] (nice-to-have items, one per item),
@@ -1033,12 +1085,14 @@ export async function runJobImport(): Promise<ImportStats> {
         requirements:            enriched.requirements || [],
         preferredQualifications: enriched.preferredQualifications || [],
         benefits:                enriched.benefits || [],
-        skills:                  enriched.skills || [],
+        skills: normalizeSkills(enriched.skills),
         salesforceProducts:      enriched.salesforceProducts || [],
         certifications:          enriched.certifications || [],
         location:                raw.location,
         workMode:                enriched.workMode,
-        experienceLevel:         enriched.experienceLevel,
+        experienceLevel: convertExperienceLevel(
+            enriched.experienceLevel
+        ),
         roleCategory:            enriched.roleCategory,
         employmentType:          enriched.employmentType,
         applyUrl:                raw.applyUrl,
