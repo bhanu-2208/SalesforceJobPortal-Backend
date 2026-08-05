@@ -35,6 +35,13 @@ export interface IJob extends Document {
   postedBy: Types.ObjectId; // ref: User — owner, used for delete permission
   createdAt: Date;
   updatedAt: Date;
+  overview?: string;
+  responsibilities?: string[];
+  requirements?: string[];
+  preferredQualifications?: string[];
+  benefits?: string[];
+  salesforceProducts?: string[];
+  certifications?: string[];
 }
 
 /* ────────────────────────────────────────────────────────────
@@ -85,7 +92,14 @@ const jobSchema = new Schema<IJob>(
       type: String,
       index: true,   // speeds up duplicate-check queries
     },
-  },
+    overview:                 { type: String },
+    responsibilities:         [{ type: String }],
+    requirements:             [{ type: String }],
+    preferredQualifications:  [{ type: String }],
+    benefits:                 [{ type: String }],
+    salesforceProducts:       [{ type: String }],
+    certifications:           [{ type: String }]
+    },
   { timestamps: true }
 );
 
