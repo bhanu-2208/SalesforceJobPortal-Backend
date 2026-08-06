@@ -3,8 +3,8 @@ import Job from "../models/Job";
 import { getFullDescription } from "./jobExtraction.service";
 import Company from "../models/Company";
 import User from "../models/User";
-import geminiModel from "./gemini.service";
-
+// import geminiModel from "./gemini.service";
+import kimi from "./kimi.service";
 import { ExperienceLevel } from "../models/Job";
 
 import { evaluateSalesforceJob } from "./salesforceFilter";
@@ -840,8 +840,26 @@ ${fullDescription}
 `.trim();
 
   try {
-    const result = await geminiModel.generateContent(prompt);
-    const raw = result.response.text();
+    // const result = await geminiModel.generateContent(prompt);
+    // const raw = result.response.text();
+    const response = await kimi.chat.completions.create({
+        model: "kimi-k2.6",
+
+        messages: [
+            {
+                role: "user",
+                content: prompt,
+            },
+        ],
+
+        temperature: 0.1,
+
+        response_format: {
+            type: "json_object",
+        },
+    });
+
+    const raw = response.choices[0].message.content ?? "";
 
     console.log("\n================ GEMINI RAW RESPONSE ================\n");
     console.log(raw);
