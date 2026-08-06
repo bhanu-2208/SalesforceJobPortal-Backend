@@ -94,6 +94,8 @@ async function getQualitativeAssessment(
     .replace("{{RESUME_TEXT}}", resumeText.slice(0, 15000));
 
   const result = await model.generateContent(prompt);
+  console.log("Gemini response:");
+  console.log(result.response.text());
   const jsonText = stripCodeFences(result.response.text());
 
   let parsedJson: unknown;
