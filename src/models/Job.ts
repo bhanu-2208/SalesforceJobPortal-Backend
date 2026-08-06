@@ -74,6 +74,7 @@ const jobSchema = new Schema<IJob>(
     employmentType: {
       type: String,
       enum: ["Full-time", "Part-time", "Contract", "Internship"],
+      default: "Full-time",
     },
     applyUrl: { type: String, required: true },
     source: { type: String },

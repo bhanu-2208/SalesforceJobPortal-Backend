@@ -1316,7 +1316,7 @@ export async function runJobImport(): Promise<ImportStats> {
             enriched.experienceLevel
         ),
         roleCategory:            enriched.roleCategory,
-        employmentType:          enriched.employmentType,
+        employmentType:          enriched.employmentType ?? "Full-time",
         applyUrl:                raw.applyUrl,
         source:                  raw.source,
         sourceId:                raw.sourceId,
