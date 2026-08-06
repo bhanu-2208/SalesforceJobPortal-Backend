@@ -753,6 +753,9 @@ async function enrichWithAI(raw: RawExternalJob, fullDescription: string): Promi
 Rewrite the job posting into structured recruiter content.
 
 VERY IMPORTANT:
+You MUST return valid JSON.
+Do not include markdown.
+Do not explain anything.
 
 The JSON fields have different purposes.
 
@@ -832,6 +835,7 @@ Rules for cleanDescription:
   "roleCategory": string | null,
   "employmentType": "Full-time" | "Part-time" | "Contract" | "Internship" | null
 }
+  
 
 Job Title: ${raw.title}
 Company: ${raw.companyName}
@@ -844,25 +848,7 @@ ${fullDescription}
   try {
     // const result = await geminiModel.generateContent(prompt);
     // const raw = result.response.text();
-    const response = await groq.chat.completions.create({
-
-      model: "llama-3.3-70b-versatile",
-
-      temperature: 0.1,
-
-      response_format: {
-          type: "json_object",
-      },
-
-      messages: [
-          {
-              role: "user",
-              content: prompt,
-          }
-        ]
-    });
-
-    const raw = response.choices[0].message.content ?? "";
+    const raw = await enrich(prompt);
 
     console.log("\n================ GEMINI RAW RESPONSE ================\n");
     console.log(raw);
@@ -1159,7 +1145,7 @@ export async function runJobImport(): Promise<ImportStats> {
       // the rule engine has approved the job.
 
       const fullDescription = await getFullDescription(raw);
-      const promptDescription = fullDescription.slice(0, 8000);
+      const promptDescription = fullDescription.slice(0, 5000);
       const enriched = await enrichWithAI(raw, promptDescription);
 
       await Job.create({

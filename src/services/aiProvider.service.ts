@@ -4,7 +4,7 @@ export async function enrich(prompt: string) {
     try {
         const response = await groq.chat.completions.create({
             model: "llama-3.3-70b-versatile",
-            temperature: 0.1,
+            temperature: 0,
             messages: [
                 {
                     role: "user",
