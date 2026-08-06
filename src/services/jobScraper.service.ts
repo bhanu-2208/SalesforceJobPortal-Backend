@@ -4,7 +4,9 @@ import { getFullDescription } from "./jobExtraction.service";
 import Company from "../models/Company";
 import User from "../models/User";
 // import geminiModel from "./gemini.service";
-import kimi from "./kimi.service";
+import groq from "./groq.service";
+import {enrich} from "./aiProvider.service"
+
 import { ExperienceLevel } from "../models/Job";
 
 import { evaluateSalesforceJob } from "./salesforceFilter";
@@ -842,21 +844,22 @@ ${fullDescription}
   try {
     // const result = await geminiModel.generateContent(prompt);
     // const raw = result.response.text();
-    const response = await kimi.chat.completions.create({
-        model: "kimi-k2.6",
+    const response = await groq.chat.completions.create({
 
-        messages: [
-            {
-                role: "user",
-                content: prompt,
-            },
-        ],
+      model: "llama-3.3-70b-versatile",
 
-        temperature: 0.1,
+      temperature: 0.1,
 
-        response_format: {
-            type: "json_object",
-        },
+      response_format: {
+          type: "json_object",
+      },
+
+      messages: [
+          {
+              role: "user",
+              content: prompt,
+          }
+        ]
     });
 
     const raw = response.choices[0].message.content ?? "";
