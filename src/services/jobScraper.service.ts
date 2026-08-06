@@ -767,9 +767,141 @@ If the posting contains 24 technical skills,
 your JSON must contain all 24.
 
 If a section is missing,
-return an empty array.
 
-Do not invent anything.
+Responsibilities
+
+Find every responsibility mentioned anywhere in the job posting.
+
+Responsibilities may appear under headings like:
+
+Responsibilities
+What You'll Do
+What You Will Do
+Your Impact
+Day-to-Day
+Role Overview
+Primary Duties
+Key Responsibilities
+Job Duties
+
+Convert each responsibility into one concise bullet.
+
+Do not merge multiple responsibilities.
+
+Do not summarize.
+
+Do not omit any.
+
+Return every responsibility exactly once.
+
+Requirements
+
+Find every required qualification.
+
+Look under headings like:
+
+Requirements
+Required Qualifications
+Basic Qualifications
+Minimum Qualifications
+Must Have
+Experience
+Skills
+Eligibility
+
+Every requirement becomes one array item.
+
+Examples:
+
+[
+"3+ years Salesforce development experience",
+"Experience with Apex",
+"Experience with Lightning Web Components",
+"REST API integration",
+"Bachelor's degree"
+]
+
+Never summarize.
+Never combine two requirements.
+
+Benefits
+
+Find every benefit.
+
+Possible headings:
+
+Benefits
+Perks
+What We Offer
+Compensation
+Rewards
+Employee Benefits
+
+Examples:
+
+[
+"Health Insurance",
+"Dental Insurance",
+"Paid Time Off",
+"401(k)",
+"Remote Work",
+"Flexible Hours",
+"Annual Bonus"
+]
+
+Return [] if none exist.
+
+Skills
+
+Extract every technical technology explicitly mentioned.
+
+Include:
+
+Programming languages
+Frameworks
+Libraries
+Databases
+Cloud platforms
+Salesforce technologies
+Developer tools
+CI/CD tools
+Testing tools
+Integration platforms
+
+Examples:
+
+Apex
+Lightning Web Components
+Aura
+Visualforce
+SOQL
+SOSL
+Sales Cloud
+Service Cloud
+Experience Cloud
+Flow
+Java
+JavaScript
+TypeScript
+SQL
+Git
+GitHub
+Jenkins
+Docker
+Kubernetes
+AWS
+Azure
+Postman
+MuleSoft
+
+Do NOT include:
+
+Communication
+Leadership
+Team Player
+Problem Solving
+Adaptability
+
 
 Return ONLY valid JSON.
 
