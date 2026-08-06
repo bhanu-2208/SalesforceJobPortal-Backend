@@ -13,12 +13,12 @@ export async function enrich(prompt: string) {
             ],
         });
 
-        console.log("RAW RESPONSE:");
-        console.log(response.choices[0].message.content);
+        const text = response.choices[0].message.content ?? "";
 
-        return JSON.parse(
-            response.choices[0].message.content ?? "{}"
-        );
+        console.log("RAW RESPONSE:");
+        console.log(text);
+
+        return text;
     } catch (err) {
         console.error("GROQ ERROR:");
         console.error(err);
