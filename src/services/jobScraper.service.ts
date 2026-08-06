@@ -750,7 +750,28 @@ function formatDescription(description: string): string {
 // }
 async function enrichWithAI(raw: RawExternalJob, fullDescription: string): Promise<AIEnrichment> {
   const prompt = `
-Rewrite the job posting into structured recruiter content.
+You are NOT a chatbot.
+
+You are an information extraction engine.
+
+Your only task is to read a job posting and copy information into JSON.
+
+Never summarize unless asked.
+
+Never omit information.
+
+If the job posting contains 18 responsibilities,
+your JSON must contain 18 responsibilities.
+
+If the posting contains 24 technical skills,
+your JSON must contain all 24.
+
+If a section is missing,
+return an empty array.
+
+Do not invent anything.
+
+Return ONLY valid JSON.
 
 VERY IMPORTANT:
 You MUST return valid JSON.
