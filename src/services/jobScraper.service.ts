@@ -3,9 +3,7 @@ import Job from "../models/Job";
 import { getFullDescription } from "./jobExtraction.service";
 import Company from "../models/Company";
 import User from "../models/User";
-// import geminiModel from "./gemini.service";
-import groq from "./groq.service";
-import {enrich} from "./aiProvider.service"
+import geminiModel from "./gemini.service";
 
 import { ExperienceLevel } from "../models/Job";
 
@@ -999,9 +997,8 @@ ${fullDescription}
 `.trim();
 
   try {
-    // const result = await geminiModel.generateContent(prompt);
-    // const raw = result.response.text();
-    const raw = await enrich(prompt);
+    const result = await geminiModel.generateContent(prompt);
+    const raw = result.response.text();
 
     console.log("\n================ GEMINI RAW RESPONSE ================\n");
     console.log(raw);
